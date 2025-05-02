@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "power-flow-game"
+version = "0.0.0"
+description = "A game based on electricity market coupling"
+authors = ["Robbie Muir <robbiemuir7@gmail.com>", "Roman Cantu <>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+pypsa = "^0.34.1"
+pandas = "^2.2.3"
+numpy = "^2.2.5"
