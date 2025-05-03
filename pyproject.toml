@@ -7,7 +7,7 @@ target-version = ["py312"]
 name = "power-flow-game"
 version = "0.0.0"
 description = "A game based on electricity market coupling"
-authors = ["Robbie Muir <robbiemuir7@gmail.com>", "Roman Cantu <>"]
+authors = ["Robbie Muir <robbiemuir7@gmail.com>", "Roman Cantu <roman94.cr@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
