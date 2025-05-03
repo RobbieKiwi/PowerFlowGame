@@ -7,10 +7,28 @@ class PlayerId(int):
         return int(self)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Player:
     id: PlayerId
     name: str
+
+    # Mutable attributes
+    is_alive: bool
+    lives: int
+    cash: int
+
+    def lose_life(self) -> None:
+        """
+        Lose a life. If the player has no lives left, mark them as dead.
+        The player loses a life when they cannot supply their demand.
+        """
+        self.lives -= 1
+
+    def die(self) -> None:
+        """
+        Mark the player as dead.
+        """
+        self.is_alive = False
 
     def to_simple_dict(self) -> dict:
         return {"id": self.id.as_int(), "name": self.name}
