@@ -39,3 +39,10 @@ class Player:
             id=PlayerId(simple_dict["id"]),
             name=simple_dict["name"],
         )
+
+
+class NPC(Player):
+    """
+    Non-Player Character (NPC) class. Inherits from Player.
+    """
+    pass
