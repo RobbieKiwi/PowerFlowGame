@@ -5,6 +5,7 @@ from typing import Self, Optional
 import json
 
 from src.models.player import Player, PlayerId
+import pandas as pd
 
 
 class Phase(Enum):
@@ -31,6 +32,9 @@ class GameState:
         # Mutable attributes
         self.phase = phase
         self.current_player = current_player
+        self._asset_frame: pd.DataFrame = pd.DataFrame()  #  Placeholder for asset frame
+        # Index: AssetId
+        # Columns: AssetType, OwnerPlayerId, Bus1Id, Bus2Id, X, Y, reactance, marginal_price, operating_cost,
 
     @property
     def game_id(self) -> int:
