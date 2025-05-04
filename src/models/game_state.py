@@ -5,6 +5,7 @@ from typing import Self, Optional
 import json
 
 from src.models.player import Player, PlayerId
+from src.models.game_map import GameMap
 
 
 class Phase(Enum):
@@ -21,16 +22,41 @@ class GameState:
         self,
         game_id: int,
         players: list[Player],
+        map: GameMap,
+        round: int,
         phase: Phase,
         current_player: Optional[PlayerId],
+        is_game_over: bool = False,
     ) -> None:
         # Read only attributes
         self._game_id = game_id
         self._players = players
+        self._map = map
 
         # Mutable attributes
+        self.round = round
         self.phase = phase
         self.current_player = current_player
+        self.is_game_over = is_game_over
+
+    def next_phase(self) -> None:
+        """
+        Increment the phase number.
+        """
+        self.phase = Phase(self.phase.value + 1)
+
+    def next_round(self) -> None:
+        """
+        Increment the round number and reset to the first phase.
+        """
+        self.phase = Phase(0)
+        self.round += 1
+
+    def end_game(self) -> None:
+        """
+        End the game.
+        """
+        self.is_game_over = True
 
     @property
     def game_id(self) -> int:
@@ -39,6 +65,10 @@ class GameState:
     @property
     def players(self) -> list[Player]:
         return self._players
+
+    @property
+    def players_alive(self) -> list[Player]:
+        return [player for player in self.players if player.is_alive]
 
     @cached_property
     def n_players(self) -> int:
@@ -54,6 +84,7 @@ class GameState:
                 if self.current_player is not None
                 else None
             ),
+            "is_game_over": self.is_game_over,
         }
 
     @classmethod
@@ -69,4 +100,5 @@ class GameState:
                 if simple_dict["current_player"] is not None
                 else None
             ),
+            is_game_over=simple_dict["is_game_over"],
         )
