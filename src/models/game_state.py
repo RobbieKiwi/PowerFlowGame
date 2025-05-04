@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import Self, Optional
 import json
 
+from src.models.assets import AssetRepo
 from src.models.player import Player, PlayerId
 import pandas as pd
 
@@ -24,6 +25,7 @@ class GameState:
         players: list[Player],
         phase: Phase,
         current_player: Optional[PlayerId],
+        asset_frame: AssetRepo
     ) -> None:
         # Read only attributes
         self._game_id = game_id
@@ -32,9 +34,7 @@ class GameState:
         # Mutable attributes
         self.phase = phase
         self.current_player = current_player
-        self._asset_frame: pd.DataFrame = pd.DataFrame()  #  Placeholder for asset frame
-        # Index: AssetId
-        # Columns: AssetType, OwnerPlayerId, Bus1Id, Bus2Id, X, Y, reactance, marginal_price, operating_cost,
+        self.asset_frame = asset_frame
 
     @property
     def game_id(self) -> int:
@@ -58,6 +58,7 @@ class GameState:
                 if self.current_player is not None
                 else None
             ),
+            "asset_frame": self.asset_frame.to_simple_dict(),
         }
 
     @classmethod
@@ -73,4 +74,5 @@ class GameState:
                 if simple_dict["current_player"] is not None
                 else None
             ),
+            asset_frame=AssetRepo.from_simple_dict(simple_dict["asset_frame"]),
         )

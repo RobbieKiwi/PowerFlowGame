@@ -5,7 +5,7 @@ U = TypeVar("U")
 V = TypeVar("V")
 
 
-class IntWrapper(int):
+class WrappedInt(int):
     def as_int(self) -> int:
         return int(self)
 

@@ -7,7 +7,7 @@ SimpleDict = dict[str, int | float | str]
 
 @dataclass(frozen=True)
 class LightDc:
-    # An indexed light weight dataclass with no complex types. It can easily be turned into a row of a dataframe
+    # An int-indexed light-weight dataclass with no complex types. It can easily be turned into a row of a dataframe
     id: int
 
     def to_simple_dict(self) -> SimpleDict:

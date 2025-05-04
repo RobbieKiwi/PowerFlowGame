@@ -2,7 +2,7 @@ import json
 from enum import Enum
 from typing import Protocol, Self, runtime_checkable, TypeVar
 
-from src.tools.typing import IntWrapper, T
+from src.tools.typing import WrappedInt, T
 
 
 @runtime_checkable
@@ -24,10 +24,10 @@ def deserialize(x: str, cls: type[GenericSerializable]) -> GenericSerializable:
     return cls.from_simple_dict(json.loads(x))
 
 
-def simplify_type(x: Enum | IntWrapper | int | float | str) -> int | float | str:
+def simplify_type(x: Enum | WrappedInt | int | float | str) -> int | float | str:
     if isinstance(x, Enum):
         return x.value
-    if isinstance(x, IntWrapper):
+    if isinstance(x, WrappedInt):
         return x.as_int()
     if isinstance(x, (int, float, str)):
         return x
@@ -39,6 +39,6 @@ def un_simplify_type(x: int | float | str, t: type[T]) -> T:
         return t(x)
     if issubclass(t, Enum):
         return t(x)
-    if issubclass(t, IntWrapper):
+    if issubclass(t, WrappedInt):
         return t(x)
     raise TypeError(f"Unsupported type {t}")

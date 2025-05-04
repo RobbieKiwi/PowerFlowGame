@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from functools import partial
 from typing import Self
 
-from src.models.data.ldc_frame import LdcFrame
+from src.models.data.ldc_repo import LdcRepo
 from src.models.data.light_dc import LightDc
 from src.models.player import PlayerId
 
@@ -12,6 +13,7 @@ class AssetType(IntEnum):
     GENERATOR = 1
     LOAD = 2
     TRANSMISSION = 3
+    ICE_CREAM = 4
 
 
 @dataclass(frozen=True)
@@ -22,11 +24,11 @@ class AssetInfo(LightDc):
     bus2: int
     x: float
     y: float
-    reactance: float
-    marginal_price: float
-    operating_cost: float
-    health: int
-    profit: float
+    reactance: float = 0.0
+    marginal_price: float = 0.0
+    operating_cost: float = 0.0
+    health: int = 0
+    profit: float = 0.0
 
     def __post_init__(self) -> None:
         assert self.health >= 0, f"health must be non-negative"
@@ -43,7 +45,8 @@ class AssetInfo(LightDc):
             ), f"bus1 and bus2 must be equal for {self.asset_type.name} type"
 
 
-class AssetFrame(LdcFrame[AssetInfo]):
+
+class AssetRepo(LdcRepo[AssetInfo]):
     @classmethod
     def _get_dc_type(cls) -> type[AssetInfo]:
         return AssetInfo
@@ -53,7 +56,8 @@ class AssetFrame(LdcFrame[AssetInfo]):
         return self.filter({"owner_player": player_id})
 
     def get_all_assets_at_bus(self, bus_id: int) -> Self:
-        return self.filter(condition=lambda x: bus_id in [x["bus2"], x["bus1"]])
+        # Does not include transmission or bus itself
+        return self.filter(condition=lambda x: x["bus2"] == bus_id and x["bus1"] == bus_id and x["asset_type"] != AssetType.BUS)
 
     def get_all_transmission_lines_on_bus(self, bus_id: int) -> Self:
         return self.get_all_assets_at_bus(bus_id=bus_id).filter({"asset_type": AssetType.TRANSMISSION})
@@ -136,7 +140,7 @@ def _test():
         ),
     ]
 
-    asset_frame = AssetFrame(asset_infos)
+    asset_frame = AssetRepo(asset_infos)
     asset_frame.get_all_assets_for_player(PlayerId(1))
     asset_frame.get_all_assets_at_bus(1)
     asset_frame.get_total_profit_for_player(PlayerId(1))

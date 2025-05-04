@@ -6,10 +6,11 @@ import pandas as pd
 
 from src.models.data.light_dc import GenericLightDc
 from src.tools.serialization import simplify_type
+from src.tools.typing import T
 
 
-class LdcFrame(Generic[GenericLightDc], ABC):
-    # A dataframe representing an indexed list of light dataclass objects
+class LdcRepo(Generic[GenericLightDc], ABC):
+    # A dataframe-based repo containing an indexed list of light dataclass objects
 
     @classmethod
     @abstractmethod
@@ -34,7 +35,7 @@ class LdcFrame(Generic[GenericLightDc], ABC):
             assert isinstance(dcs, pd.DataFrame)
             df = dcs.copy(deep=True)
 
-        assert df.index.is_unique, f"Ids are not unique: {df.index.duplicated()}"
+        assert df.index.is_unique, f"Ids are not unique: {df.index}"
         self._df = df
 
     @overload
@@ -49,10 +50,10 @@ class LdcFrame(Generic[GenericLightDc], ABC):
         if isinstance(x, str):
             return self._df.loc[:, x].copy(deep=True)
         assert isinstance(x, int)
-
-        if x not in self._df.index:
+        simple_x = simplify_type(x)
+        if simple_x not in self._df.index:
             raise KeyError(f"Element with id {x} not found in {self.__class__.__name__}")
-        row = self._df.loc[x]
+        row = self._df.loc[simple_x]
         return self._get_dc_type().from_simple_dict({**row.to_dict(), "id": x})
 
     def __iter__(self) -> Iterator[GenericLightDc]:
@@ -69,9 +70,13 @@ class LdcFrame(Generic[GenericLightDc], ABC):
         if isinstance(other, self.__class__):
             return self.__class__(pd.concat([self._df, other._df], axis=0))
         elif isinstance(other, self._get_dc_type()):
-            return self.__class__(pd.concat([self._df, pd.DataFrame([other.to_simple_dict()])], axis=0))
+            other_frame = pd.DataFrame([other.to_simple_dict()]).set_index("id", drop=True)
+            return self.__class__(pd.concat([self._df, other_frame], axis=0))
         else:
             raise TypeError(f"Cannot add {type(other)} to {type(self)}")
+
+    def __len__(self) -> int:
+        return len(self._df)
 
     @property
     def df(self) -> pd.DataFrame:
@@ -113,7 +118,7 @@ class LdcFrame(Generic[GenericLightDc], ABC):
         :return: A new version of the LdcFrame with the items dropped
         """
         if isinstance(condition, list):
-            keys = condition
+            keys = [simplify_type(x) for x in condition]
         else:
             keys = self.filter(condition=condition).df.index
         return self.__class__(self._df.drop(keys, axis=0))
@@ -129,7 +134,7 @@ class LdcFrame(Generic[GenericLightDc], ABC):
         }
 
     @classmethod
-    def from_simple_dict(cls, data: dict) -> Self:
+    def from_simple_dict(cls: type[T], data: dict) -> T:
         # Creates a frame from a dict representation
         assert data["class"] == cls.__name__, f"Class mismatch: {data['class']} != {cls.__name__}"
         dcs = [cls._get_dc_type().from_simple_dict(dc) for dc in data["data"]]
