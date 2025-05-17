@@ -1813,4 +1813,4 @@ viz = ["cartopy", "matplotlib", "nc-time-axis", "seaborn"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "51976b3f1dd106b265e8461f93126d372c8a497cc3e210788e937e16e2d8d6a9"
+content-hash = "d7bf2e3190fb37c47c09143e35f48d713ae02788a78fa2ce1a79599995f92f7c"
