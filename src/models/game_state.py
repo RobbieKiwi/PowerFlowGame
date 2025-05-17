@@ -56,7 +56,5 @@ class GameState:
             buses=BusRepo.from_simple_dict(simple_dict["buses"]),
             assets=AssetRepo.from_simple_dict(simple_dict["assets"]),
             transmission=TransmissionRepo.from_simple_dict(simple_dict["transmission"]),
-            market_coupling_result=MarketCouplingResult.from_simple_dict(
-                simple_dict["market_coupling_result"]
-            ),
+            market_coupling_result=MarketCouplingResult.from_simple_dict(simple_dict["market_coupling_result"]),
         )

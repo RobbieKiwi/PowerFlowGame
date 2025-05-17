@@ -20,9 +20,7 @@ class Bus(LightDc):
 
     def __post_init__(self) -> None:
         if self.is_ice_cream_bus:
-            assert (
-                self.asset_type == AssetType.LOAD
-            ), "Ice cream bus must be of type LOAD"
+            assert self.asset_type == AssetType.LOAD, "Ice cream bus must be of type LOAD"
 
 
 class BusRepo(LdcRepo[Bus]):

@@ -10,9 +10,7 @@ from src.models.game_state import GameState
 
 class Engine:
     @classmethod
-    def handle_event(
-        cls, game_state: GameState, event: Event
-    ) -> tuple[GameState, list[EngineEvent]]:
+    def handle_event(cls, game_state: GameState, event: Event) -> tuple[GameState, list[EngineEvent]]:
         """
         Events happen every time a player takes an action or a timer runs out.
         Every time an event occurs, the engine is informed and it can then:

@@ -5,9 +5,7 @@ from src.models.transmission import TransmissionRepo
 
 class MarketCouplingCalculator:
     @classmethod
-    def run(
-        cls, assets: AssetRepo, transmission: TransmissionRepo
-    ) -> MarketCouplingResult:
+    def run(cls, assets: AssetRepo, transmission: TransmissionRepo) -> MarketCouplingResult:
         """
         Run the market coupling algorithm.
         :param assets: The asset repository

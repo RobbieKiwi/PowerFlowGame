@@ -16,9 +16,7 @@ class Player(LightDc):
 
     def __post_init__(self) -> None:
         assert (
-            self.color.startswith("#")
-            and len(self.color) == 7
-            and int(self.color[1:], 16) < 0xFFFFFF
+            self.color.startswith("#") and len(self.color) == 7 and int(self.color[1:], 16) < 0xFFFFFF
         ), "Invalid color format"
 
 
@@ -42,9 +40,7 @@ class PlayerRepo(LdcRepo[Player]):
         return len(self.get_currently_playing()) == 0
 
     # UPDATE
-    def _adjust_money(
-        self, player_id: PlayerId, func: Callable[[float], float]
-    ) -> Self:
+    def _adjust_money(self, player_id: PlayerId, func: Callable[[float], float]) -> Self:
         df = self.df
         df.loc[player_id, "money"] = func(df.loc[player_id, "money"])
         return self.update_frame(df)

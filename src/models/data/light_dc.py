@@ -19,8 +19,7 @@ class LightDc:
     @classmethod
     def from_simple_dict(cls, simple_dict: SimpleDict) -> Self:
         init_dict = {
-            k: un_simplify_type(x=simple_dict[k], t=v.type)
-            for k, v in cls.__dataclass_fields__.items()  # noqa
+            k: un_simplify_type(x=simple_dict[k], t=v.type) for k, v in cls.__dataclass_fields__.items()  # noqa
         }
         return cls(**init_dict)  # noqa
 

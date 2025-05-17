@@ -61,9 +61,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         assert isinstance(x, int)
         simple_x = simplify_type(x)
         if simple_x not in self._df.index:
-            raise KeyError(
-                f"Element with id {x} not found in {self.__class__.__name__}"
-            )
+            raise KeyError(f"Element with id {x} not found in {self.__class__.__name__}")
         row = self.df.loc[simple_x]
         return self._get_dc_type().from_simple_dict({**row.to_dict(), "id": x})
 
@@ -81,9 +79,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         if isinstance(other, self.__class__):
             return self.__class__(pd.concat([self.df, other.df], axis=0))
         elif isinstance(other, self._get_dc_type()):
-            other_frame = pd.DataFrame([other.to_simple_dict()]).set_index(
-                "id", drop=True
-            )
+            other_frame = pd.DataFrame([other.to_simple_dict()]).set_index("id", drop=True)
             return self.__class__(pd.concat([self.df, other_frame], axis=0))
         else:
             raise TypeError(f"Cannot add {type(other)} to {type(self)}")
@@ -122,8 +118,8 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         Fast and easy: A dictionary of key-value pairs to filter on
         OR
         Advanced: A function that is called on the underlying series
-        # Note that if a function is provided, the function is called on the underlying series which cannot contain complex types
-        # Make sure to convert to simple types before using them in the function
+        Note that if a function is provided, the function is called on the underlying series which cannot contain
+        complex types. Make sure to convert to simple types before using them in the function
         :param operator: "or" or "and" to combine two conditions
         :param condition_2: A second condition to combine with the first one
         :return: A logical indexer for the given condition or combination of conditions
@@ -137,13 +133,9 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         if condition_2 is None:
             return self._condition_to_logical_indexer(condition)
         elif operator == "and":
-            return self._condition_to_logical_indexer(
-                condition
-            ) & self._condition_to_logical_indexer(condition_2)
+            return self._condition_to_logical_indexer(condition) & self._condition_to_logical_indexer(condition_2)
         elif operator == "or":
-            return self._condition_to_logical_indexer(
-                condition
-            ) | self._condition_to_logical_indexer(condition_2)
+            return self._condition_to_logical_indexer(condition) | self._condition_to_logical_indexer(condition_2)
         else:
             raise ValueError(f"Invalid operator: {operator}. Use 'or' or 'and'.")
 
@@ -157,9 +149,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         Returns a copy of the repo filtered using the given condition
         :return: The filtered LdcFrame
         """
-        logical_indexer = self._filter(
-            condition=condition, operator=operator, condition_2=condition_2
-        )
+        logical_indexer = self._filter(condition=condition, operator=operator, condition_2=condition_2)
         filtered_df = self.df[logical_indexer]
         return self.__class__(filtered_df)
 
@@ -174,9 +164,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         :return: A new version of the LdcFrame with the items dropped
         """
 
-        logical_indexer = self._filter(
-            condition=condition, operator=operator, condition_2=condition_2
-        )
+        logical_indexer = self._filter(condition=condition, operator=operator, condition_2=condition_2)
         index = logical_indexer.loc[logical_indexer].index
         return self.from_frame(self.df.drop(index, axis=0))
 
@@ -203,9 +191,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
     @classmethod
     def from_simple_dict(cls: type[T], data: dict) -> T:
         # Creates a frame from a dict representation
-        assert (
-            data["class"] == cls.__name__
-        ), f"Class mismatch: {data['class']} != {cls.__name__}"
+        assert data["class"] == cls.__name__, f"Class mismatch: {data['class']} != {cls.__name__}"
         dcs = [cls._get_dc_type().from_simple_dict(dc) for dc in data["data"]]
         return cls(dcs)
 

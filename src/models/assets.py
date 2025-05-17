@@ -29,9 +29,7 @@ class AssetInfo(LightDc):
 
     def __post_init__(self) -> None:
         if self.is_ice_cream:
-            assert (
-                self.asset_type == AssetType.LOAD
-            ), "Ice cream asset must be of type LOAD"
+            assert self.asset_type == AssetType.LOAD, "Ice cream asset must be of type LOAD"
 
 
 class AssetRepo(LdcRepo[AssetInfo]):
