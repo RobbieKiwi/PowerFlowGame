@@ -6,7 +6,9 @@ from typing import Protocol, Self, runtime_checkable, TypeVar
 
 from src.tools.typing import WrappedInt, T
 
-SimpleDict = dict[str, int | float | str]
+Primitive = int | float | str | bool
+SimpleDict = dict[str, Primitive]
+primitives = (int, float, str, bool)
 
 
 @runtime_checkable
@@ -28,26 +30,26 @@ def deserialize(x: str, cls: type[GenericSerializable]) -> GenericSerializable:
     return cls.from_simple_dict(json.loads(x))
 
 
-def simplify_type(x: Enum | WrappedInt | int | float | str) -> int | float | str:
+def simplify_type(x: Enum | WrappedInt | Primitive) -> Primitive:
     if isinstance(x, Enum):
         return x.value
     if isinstance(x, WrappedInt):
         return x.as_int()
-    if isinstance(x, (int, float, str)):
+    if isinstance(x, primitives):
         return x
     raise TypeError(f"Unsupported type {type(x)}")
 
 
 def simplify_optional_type(
-    x: Enum | WrappedInt | int | float | str | None,
-) -> int | float | str | None:
+    x: Enum | WrappedInt | Primitive | None,
+) -> Primitive | None:
     if x is None:
         return None
     return simplify_type(x)
 
 
-def un_simplify_type(x: int | float | str, t: type[T]) -> T:
-    if t in [int, float, str]:
+def un_simplify_type(x: Primitive, t: type[T]) -> T:
+    if t in primitives:
         return t(x)
     if issubclass(t, Enum):
         return t(x)

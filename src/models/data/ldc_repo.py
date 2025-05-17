@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABC
-from enum import IntEnum
 from typing import (
     Generic,
     Any,
@@ -15,7 +14,6 @@ from typing import (
 import pandas as pd
 
 from src.models.data.light_dc import GenericLightDc
-from src.models.ids import BusId
 from src.tools.serialization import simplify_type
 from src.tools.typing import T
 
@@ -129,9 +127,6 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         :param operator: "or" or "and" to combine two conditions
         :param condition_2: A second condition to combine with the first one
         :return: A logical indexer for the given condition or combination of conditions
-        >>> class Color(IntEnum):
-        >>>    Red = 1
-        >>>
         >>> self._filter({"bus": BusId(1), "color": Color.Red})
         >>> self._filter(lambda x: x["bus"] == 1 and x["color"] == simplify_type(Color.Red))
         >>>

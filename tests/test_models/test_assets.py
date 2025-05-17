@@ -47,6 +47,8 @@ class TestAssets(TestCase):
             asset_type=AssetType.GENERATOR,
             owner_player=PlayerId.get_npc(),
             bus=BusId(3),
+            power_expected=10.0,
+            power_std=0.0,
         )
         self.assertEqual(len(new_repo), len(repo) + 1)
 
@@ -62,6 +64,8 @@ class TestAssets(TestCase):
                 bus=BusId(1),
                 bid_price=20.0,
                 operating_cost=10.0,
+                power_expected=10.0,
+                power_std=0.0,
             ),
             AssetInfo(
                 id=AssetId(next(counter)),
@@ -71,6 +75,8 @@ class TestAssets(TestCase):
                 marginal_price=20.0,
                 operating_cost=10.0,
                 bid_price=0.0,
+                power_expected=10.0,
+                power_std=0.0,
             ),
             AssetInfo(
                 id=AssetId(next(counter)),
@@ -80,6 +86,8 @@ class TestAssets(TestCase):
                 marginal_price=20.0,
                 operating_cost=10.0,
                 bid_price=0.0,
+                power_expected=10.0,
+                power_std=0.0,
             ),
         ]
         return AssetRepo(asset_infos)
