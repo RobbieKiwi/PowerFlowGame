@@ -16,11 +16,6 @@ pypsa = "^0.34.1"
 pandas = "^2.2.3"
 numpy = "^2.2.5"
 
-[tool.poetry.dev-dependencies]
-black = "^25.1.0"
-flake8 = "^7.2.0"
-pytest = "^8.3.5"
-
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 flake8 = "^7.2.0"
