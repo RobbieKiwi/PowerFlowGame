@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Self
 
-from src.tools.serialization import SimpleDict, simplify_type
+from src.tools.serialization import SimpleDict
 
 
 @dataclass(frozen=True)
