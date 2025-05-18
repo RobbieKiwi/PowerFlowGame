@@ -8,4 +8,4 @@ A game based on electricity market coupling
 1. Clone the repository
 2. Set up a virtual environment with Python 3.12
 3. Install poetry `pip install poetry`
-4. Install dependencies with `poetry install`
+4. Install dependencies with `poetry install --no-root`
