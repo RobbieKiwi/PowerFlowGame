@@ -1,13 +1,20 @@
 from dataclasses import dataclass
-from enum import Enum
-from functools import cached_property
+from enum import IntEnum
 from typing import Self, Optional
-import json
 
-from src.models.player import Player, PlayerId
+from src.models.assets import AssetRepo
+from src.models.buses import BusRepo
+from src.models.ids import PlayerId
+from src.models.market_coupling_result import MarketCouplingResult
+from src.models.player import PlayerRepo
+from src.models.transmission import TransmissionRepo
+from src.tools.serialization import (
+    simplify_type,
+    un_simplify_type,
+)
 
 
-class Phase(Enum):
+class Phase(IntEnum):
     # Values are just placeholders
     CONSTRUCTION = 0
     SNEAKY_TRICKS = 1
@@ -17,56 +24,37 @@ class Phase(Enum):
 @dataclass
 class GameState:
     # A complete description of the current state of the game.
-    def __init__(
-        self,
-        game_id: int,
-        players: list[Player],
-        phase: Phase,
-        current_player: Optional[PlayerId],
-    ) -> None:
-        # Read only attributes
-        self._game_id = game_id
-        self._players = players
-
-        # Mutable attributes
-        self.phase = phase
-        self.current_player = current_player
+    game_id: int
+    phase: Phase
+    players: PlayerRepo
+    buses: BusRepo
+    assets: AssetRepo
+    transmission: TransmissionRepo
+    market_coupling_result: Optional[MarketCouplingResult]
 
     @property
-    def game_id(self) -> int:
-        return self._game_id
-
-    @property
-    def players(self) -> list[Player]:
-        return self._players
-
-    @cached_property
-    def n_players(self) -> int:
-        return len(self.players)
+    def current_players(self) -> list[PlayerId]:
+        return self.players.get_currently_playing().player_ids
 
     def to_simple_dict(self) -> dict:
         return {
             "game_id": self.game_id,
-            "players": [player.to_simple_dict() for player in self.players],
-            "phase": self.phase.value,
-            "current_player": (
-                self.current_player.as_int()
-                if self.current_player is not None
-                else None
-            ),
+            "phase": simplify_type(self.phase),
+            "players": self.players.to_simple_dict(),
+            "buses": self.buses.to_simple_dict(),
+            "assets": self.assets.to_simple_dict(),
+            "transmission": self.transmission.to_simple_dict(),
+            "market_coupling_result": self.market_coupling_result.to_simple_dict(),
         }
 
     @classmethod
     def from_simple_dict(cls, simple_dict: dict) -> Self:
         return cls(
             game_id=simple_dict["game_id"],
-            players=[
-                Player.from_simple_dict(player) for player in simple_dict["players"]
-            ],
-            phase=Phase(simple_dict["phase"]),
-            current_player=(
-                PlayerId(simple_dict["current_player"])
-                if simple_dict["current_player"] is not None
-                else None
-            ),
+            phase=un_simplify_type(x=simple_dict["phase"], t=Phase),
+            players=PlayerRepo.from_simple_dict(simple_dict["players"]),
+            buses=BusRepo.from_simple_dict(simple_dict["buses"]),
+            assets=AssetRepo.from_simple_dict(simple_dict["assets"]),
+            transmission=TransmissionRepo.from_simple_dict(simple_dict["transmission"]),
+            market_coupling_result=MarketCouplingResult.from_simple_dict(simple_dict["market_coupling_result"]),
         )
