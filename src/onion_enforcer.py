@@ -125,8 +125,6 @@ def check_repo() -> None:
 
     issues = [i for i in [r.find_issue() for r in rules] if i is not None]
     if len(issues):
-        for i in issues:
-            i.rule.find_issue()
         raise OnionEnforcerError(issues)
 
 
