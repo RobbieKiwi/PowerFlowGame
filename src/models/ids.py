@@ -3,6 +3,10 @@ from typing import Self
 from src.tools.typing import WrappedInt
 
 
+class GameId(WrappedInt):
+    pass
+
+
 class PlayerId(WrappedInt):
     @property
     def is_npc(self) -> bool:
