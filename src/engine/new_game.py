@@ -32,7 +32,7 @@ from typing import (
 )
 
 
-all = ["create_new_game"]
+__all__ = ["create_new_game"]
 
 
 def create_new_game(
