@@ -9,8 +9,8 @@ from src.models.ids import PlayerId, BusId
 @dataclass(frozen=True)
 class Bus(LightDc):
     id: BusId
-    # x: float
-    # y: float
+    x: float
+    y: float
     player_id: PlayerId = PlayerId.get_npc()
 
     @property

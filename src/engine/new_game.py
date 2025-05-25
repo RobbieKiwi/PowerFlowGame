@@ -26,9 +26,21 @@ from src.models.transmission import (
     TransmissionRepo,
     TransmissionInfo
 )
+from typing import (
+    List,
+    Dict
+)
 
 
-def create_new_game(game_id: GameId, settings: GameSettings, player_names, player_colors) -> GameState:
+all = ["create_new_game"]
+
+
+def create_new_game(
+        game_id: GameId,
+        settings: GameSettings,
+        player_names: List[str],
+        player_colors: List[str]
+) -> GameState:
     """
     Create a new game state with the given game ID and settings.
     :param game_id: Unique identifier for the game.
@@ -42,16 +54,16 @@ def create_new_game(game_id: GameId, settings: GameSettings, player_names, playe
         game_id=game_id,
         game_settings=settings,
         phase=Phase(0),
-        players=initialize_players_repo(player_names, player_colors, settings),
-        buses=initialize_buses_repo(n_players, settings),
-        assets=initialize_assets_repo(),
-        transmission=initialize_transmission_repo(),
+        players=_initialize_players_repo(player_names, player_colors, settings),
+        buses=_initialize_buses_repo(n_players, settings),
+        assets=_initialize_assets_repo(),
+        transmission=_initialize_transmission_repo(),
         market_coupling_result=None,
     )
     return new_game
 
 
-def initialize_players_repo(names: list[str], colors: list[str], settings: GameSettings) -> PlayerRepo:
+def _initialize_players_repo(names: List[str], colors: List[str], settings: GameSettings) -> PlayerRepo:
     """
     Create a PlayerRepo with the given player names and colors.
     :param names: List of player names.
@@ -63,32 +75,41 @@ def initialize_players_repo(names: list[str], colors: list[str], settings: GameS
 
     players = [
         Player(
-            id=PlayerId(i + 1),
+            id=PlayerId(i),
             name=name,
             color=colors[i],
             money=settings.initial_funds,
             is_having_turn=False,  # Initial state, no player has a turn yet
         )
-        for i, name in enumerate(names)
+        for i, name in enumerate(names, start=1)
     ]
 
     return PlayerRepo(players)
 
 
-def initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
+def _initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
     """
     Create an initial BusRepo.
     :return: A new BusRepo instance.
     """
+
+    def _assign_bus_location(i: int) -> Dict[str, float]:
+        """
+        Assign a location to the bus based on its index.
+        :param i: Index of the bus.
+        :return: Tuple of (x, y) coordinates for the bus.
+        """
+        return {'x': float(i), 'y': float(i)}  # TODO define logic for bus location (e.g., from map library)
+
     buses = [
-        Bus(id=BusId(i + 1), player_id=PlayerId(i + 1)) if i < n_players
-        else Bus(id=BusId(i + 1))  # Neutral bus not owned by any player
-        for i in range(settings.n_buses)
+        Bus(id=BusId(i), player_id=PlayerId(i), **_assign_bus_location(i)) if i < n_players
+        else Bus(id=BusId(i), **_assign_bus_location(i))  # Neutral bus not owned by any player
+        for i in range(1, settings.n_buses + 1)
     ]
     return BusRepo(buses)
 
 
-def initialize_assets_repo() -> AssetRepo:
+def _initialize_assets_repo() -> AssetRepo:
     """
     Create an initial AssetRepo.
     :return: A new AssetRepo instance.
@@ -97,7 +118,7 @@ def initialize_assets_repo() -> AssetRepo:
     raise NotImplementedError("Initial asset configuration not implemented.")
 
 
-def initialize_transmission_repo() -> TransmissionRepo:
+def _initialize_transmission_repo() -> TransmissionRepo:
     """
     Create an initial TransmissionRepo.
     :return: A new TransmissionRepo instance.
