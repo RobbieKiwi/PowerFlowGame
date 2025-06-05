@@ -10,11 +10,11 @@ class BaseGameRepo(ABC):
         pass
 
     @abstractmethod
-    def create_game(self, game: GameState) -> GameState:
+    def create_game(self, game: GameState) -> None:
         pass
 
     @abstractmethod
-    def update_game(self, game: GameState) -> GameState:
+    def update_game(self, game: GameState) -> None:
         pass
 
     @abstractmethod
@@ -22,7 +22,7 @@ class BaseGameRepo(ABC):
         pass
 
     @abstractmethod
-    def list_games(self) -> list[GameId]:
+    def list_game_ids(self) -> list[GameId]:
         pass
 
     @abstractmethod

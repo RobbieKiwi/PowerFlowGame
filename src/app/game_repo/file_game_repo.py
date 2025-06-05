@@ -12,7 +12,7 @@ class FileGameRepo(BaseGameRepo):
         self.cache_dir = cache_dir
 
     def generate_game_id(self) -> GameId:
-        game_ids = self.list_games()
+        game_ids = self.list_game_ids()
         return GameId(max(game_ids).as_int() + 1 if game_ids else 0)
 
     def create_game(self, game: GameState) -> None:
@@ -37,7 +37,7 @@ class FileGameRepo(BaseGameRepo):
             data = file.read()
         return deserialize(x=data, cls=GameState)
 
-    def list_games(self) -> list[GameId]:
+    def list_game_ids(self) -> list[GameId]:
         game_files = self.cache_dir.glob("game_*.json")
         return [self.file_path_to_game_id(file_path) for file_path in game_files if file_path.is_file()]
 
