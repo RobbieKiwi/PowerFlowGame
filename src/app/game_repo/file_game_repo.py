@@ -54,5 +54,5 @@ class FileGameRepo(BaseGameRepo):
         """Extract the game ID from a file path."""
         if not file_path.name.startswith("game_") or not file_path.name.endswith(".json"):
             raise ValueError(f"Invalid game file name: {file_path.name}")
-        game_id_str = file_path.name[len("game_"):-len(".json")]
+        game_id_str = file_path.name[len("game_") : -len(".json")]
         return GameId(int(game_id_str))

@@ -1,45 +1,18 @@
 from src.models.game_settings import GameSettings
-from src.models.ids import (
-    GameId,
-    PlayerId,
-    BusId,
-    AssetId,
-    TransmissionId
-)
-from src.models.game_state import (
-    GameState,
-    Phase
-)
-from src.models.player import (
-    Player,
-    PlayerRepo
-)
-from src.models.buses import (
-    BusRepo,
-    Bus
-)
-from src.models.assets import (
-    AssetRepo,
-    AssetInfo
-)
-from src.models.transmission import (
-    TransmissionRepo,
-    TransmissionInfo
-)
-from typing import (
-    List,
-    Dict
-)
+from src.models.ids import GameId, PlayerId, BusId, AssetId, TransmissionId
+from src.models.game_state import GameState, Phase
+from src.models.player import Player, PlayerRepo
+from src.models.buses import BusRepo, Bus
+from src.models.assets import AssetRepo, AssetInfo
+from src.models.transmission import TransmissionRepo, TransmissionInfo
+from typing import List, Dict
 
 
 __all__ = ["create_new_game"]
 
 
 def create_new_game(
-        game_id: GameId,
-        settings: GameSettings,
-        player_names: List[str],
-        player_colors: List[str]
+    game_id: GameId, settings: GameSettings, player_names: List[str], player_colors: List[str]
 ) -> GameState:
     """
     Create a new game state with the given game ID and settings.
@@ -102,8 +75,11 @@ def _initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
         return {'x': float(i), 'y': float(i)}  # TODO define logic for bus location (e.g., from map library)
 
     buses = [
-        Bus(id=BusId(i), player_id=PlayerId(i), **_assign_bus_location(i)) if i < n_players
-        else Bus(id=BusId(i), **_assign_bus_location(i))  # Neutral bus not owned by any player
+        (
+            Bus(id=BusId(i), player_id=PlayerId(i), **_assign_bus_location(i))
+            if i < n_players
+            else Bus(id=BusId(i), **_assign_bus_location(i))
+        )  # Neutral bus not owned by any player
         for i in range(1, settings.n_buses + 1)
     ]
     return BusRepo(buses)

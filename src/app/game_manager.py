@@ -10,12 +10,7 @@ FrontEndHandler = Callable[[EngineEvent], None]
 
 
 class GameManager:
-    def __init__(
-            self,
-            game_repo: BaseGameRepo,
-            game_engine: Engine,
-            front_end_handler: FrontEndHandler
-    ) -> None:
+    def __init__(self, game_repo: BaseGameRepo, game_engine: Engine, front_end_handler: FrontEndHandler) -> None:
         self.game_repo = game_repo
         self.game_engine = game_engine
         self.front_end_handler = front_end_handler
@@ -39,4 +34,3 @@ class GameManager:
 
         assert len(new_phase_events) == 1, "There should be at most one NewPhase event per handle_event call."
         return self.handle_event(game_state=game_state, event=new_phase_events[0])
-
