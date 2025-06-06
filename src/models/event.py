@@ -1,21 +1,17 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Self
 
-from src.models.game_state import GameState
+from src.models.game_state import GameState, Phase
 from src.models.ids import PlayerId, AssetId
-from src.tools.serialization import (
-    SerializableBase,
-    SimpleDict,
-    simplify_type,
-    un_simplify_type,
-)
 
 
 @dataclass(frozen=True)
-class Event(SerializableBase, ABC):
+class Event(ABC):
     pass
 
+@dataclass(frozen=True)
+class NewPhase(Event):
+    phase: Phase
 
 @dataclass(frozen=True)
 class PlayerEvent(Event, ABC):
@@ -43,33 +39,36 @@ class EngineEvent(Event, ABC):
 
 
 @dataclass(frozen=True)
-class GameUpdateEvent(EngineEvent):
-    # The basic message that gets sent to a player to let them know the game state has changed
-    def to_simple_dict(self) -> SimpleDict:
-        return {
-            "player_id": simplify_type(self.player_id),
-            "game_state": self.game_state.to_simple_dict(),
-        }
-
-    @classmethod
-    def from_simple_dict(cls, simple_dict: SimpleDict) -> Self:
-        return cls(
-            player_id=un_simplify_type(x=simple_dict["player_id"], t=PlayerId),
-            game_state=GameState.from_simple_dict(simple_dict["game_state"]),
-        )
+class GameUpdate(EngineEvent):
+    # The basic message that gets sent to a player to let them know the game state has
+    pass
 
 
 @dataclass(frozen=True)
-class UpdateBidEvent(PlayerEvent):
+class UpdateBidRequest(PlayerEvent):
     asset_id: AssetId
     bid_price: float
 
 
 @dataclass(frozen=True)
-class BuyAssetEvent(PlayerEvent):
+class UpdateBidResponse(EngineEvent):
+    game_state: GameState
+    success: bool
     asset_id: AssetId
 
 
 @dataclass(frozen=True)
-class EndTurnEvent(PlayerEvent):
+class BuyAssetRequest(PlayerEvent):
+    asset_id: AssetId
+
+
+@dataclass(frozen=True)
+class BuyAssetResponse(EngineEvent):
+    game_state: GameState
+    success: bool
+    asset_id: AssetId
+
+
+@dataclass(frozen=True)
+class EndTurn(PlayerEvent):
     asset_id: AssetId

@@ -28,6 +28,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install poetry
         poetry install --no-interaction --no-root --with dev
+    - name: Check onion architecture
+      run: |
+          poetry run python -m src.onion_enforcer
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
