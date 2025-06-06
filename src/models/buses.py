@@ -39,4 +39,4 @@ class BusRepo(LdcRepo[Bus]):
         """Get the bus for a specific player."""
         player_buses = self.filter({"player_id": player_id})
         assert len(player_buses) == 1
-        return player_buses[0]
+        return player_buses.as_objs()[0]

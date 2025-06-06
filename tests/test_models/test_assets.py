@@ -63,4 +63,3 @@ class TestAssets(TestCase):
             power_std=0.0,
         )
         self.assertEqual(len(new_repo), len(repo) + 1)
-

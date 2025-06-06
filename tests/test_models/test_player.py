@@ -35,10 +35,10 @@ class TestPlayers(TestCase):
 
     def test_delete_assets(self) -> None:
         player_ids = [PlayerId(1), PlayerId(2)]
-        repo = AssetRepoMaker.make_quick()
-
+        repo = AssetRepoMaker(player_ids=player_ids).add_asset(owner=PlayerId(1)).add_asset(owner=PlayerId(1)).make()
+        n_assets = len(repo.get_all_for_player(PlayerId(1)))
         new_repo = repo.delete_for_player(PlayerId(1))
-        self.assertEqual(len(repo.get_all_for_player(PlayerId(1))), 2)
+        self.assertEqual(len(repo.get_all_for_player(PlayerId(1))), n_assets)
         self.assertEqual(len(new_repo.get_all_for_player(PlayerId(1))), 0)
 
     def test_add_asset(self) -> None:
