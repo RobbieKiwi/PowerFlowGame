@@ -9,24 +9,19 @@ from src.models.message import GameToPlayerMessage, PlayerToGameMessage, ToGameM
 @runtime_checkable
 class CanReceiveGameToPlayerMessages(Protocol):
     # A generic stub for the front end implementation
-    def handle_player_messages(self, msgs: list[GameToPlayerMessage]) -> None:
-        ...
+    def handle_player_messages(self, msgs: list[GameToPlayerMessage]) -> None: ...
 
 
 @runtime_checkable
 class CanReceiveToGameMessage(Protocol):
     # A generic stub for the game engine implementation
     @classmethod
-    def handle_message(cls, game_state: GameState, msg: ToGameMessage) -> tuple[GameState, list[FromGameMessage]]:
-        ...
+    def handle_message(cls, game_state: GameState, msg: ToGameMessage) -> tuple[GameState, list[FromGameMessage]]: ...
 
 
 class GameManager:
     def __init__(
-            self,
-            game_repo: BaseGameRepo,
-            game_engine: CanReceiveToGameMessage,
-            front_end: CanReceiveGameToPlayerMessages
+        self, game_repo: BaseGameRepo, game_engine: CanReceiveToGameMessage, front_end: CanReceiveGameToPlayerMessages
     ) -> None:
         assert isinstance(game_repo, BaseGameRepo)
         assert isinstance(game_engine, CanReceiveToGameMessage)
