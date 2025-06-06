@@ -1,3 +1,4 @@
+from itertools import count
 from unittest import TestCase
 
 from src.models.assets import AssetRepo, AssetType, AssetInfo
@@ -6,7 +7,7 @@ from src.models.player import PlayerId
 from tests.utils.repo_maker import AssetRepoMaker, BusRepoMaker
 
 
-class TestAssets(TestCase):
+class TestPlayers(TestCase):
     def test_make_repo(self) -> None:
         repo = AssetRepoMaker.make_quick()
         self.assertIsInstance(repo, AssetRepo)
@@ -34,23 +35,16 @@ class TestAssets(TestCase):
 
     def test_delete_assets(self) -> None:
         player_ids = [PlayerId(1), PlayerId(2)]
-        repo = AssetRepoMaker.make_quick(n_normal_assets=20, player_ids=player_ids)
-
-        original_assets_for_p1 = len(repo.get_all_for_player(PlayerId(1)))
-        self.assertGreater(original_assets_for_p1, 0)
+        repo = AssetRepoMaker.make_quick()
 
         new_repo = repo.delete_for_player(PlayerId(1))
-        new_assets_for_p1 = len(new_repo.get_all_for_player(PlayerId(1)))
-        self.assertEqual(new_assets_for_p1, 0)
-
-        # Make sure original was not modified
-        self.assertEqual(original_assets_for_p1, len(repo.get_all_for_player(PlayerId(1))))
+        self.assertEqual(len(repo.get_all_for_player(PlayerId(1))), 2)
+        self.assertEqual(len(new_repo.get_all_for_player(PlayerId(1))), 0)
 
     def test_add_asset(self) -> None:
         # Cannot have duplicate ids
-        repo = AssetRepoMaker.make_quick(n_normal_assets=20)
-
         with self.assertRaises(AssertionError):
+            repo = self._make_repo()
             repo + repo
 
         asset_id = AssetId(len(repo) + 1)
@@ -64,3 +58,41 @@ class TestAssets(TestCase):
         )
         self.assertEqual(len(new_repo), len(repo) + 1)
 
+    @staticmethod
+    def _make_repo() -> AssetRepo:
+        player_ids = [PlayerId(1), PlayerId(2)]
+        bus_repo = BusRepoMaker().add_bus(PlayerId(1)).add_bus(PlayerId(2)).add_bus().make()
+        npc_bus_id = bus_repo.npc_bus_ids[0]
+        p1_bus_id = bus_repo.get_bus_for_player(PlayerId(1)).id
+        p2_bus_id = bus_repo.get_bus_for_player(PlayerId(2)).id
+
+        asset_repo = (
+            AssetRepoMaker(player_ids=player_ids, bus_repo=bus_repo)
+            .add_asset(
+                cat="Generator",
+                owner=PlayerId(1),
+                bus=npc_bus_id,
+            )
+            .add_asset(
+                cat="Load",
+                owner=PlayerId(2),
+                bus=npc_bus_id,
+            )
+            .add_asset(
+                cat="Generator",
+                owner=PlayerId(1),
+                bus=npc_bus_id,
+            )
+            .add_asset(
+                cat="IceCream",
+                owner=PlayerId(1),
+                bus=p1_bus_id,
+            )
+            .add_asset(
+                cat="IceCream",
+                owner=PlayerId(2),
+                bus=p2_bus_id,
+            )
+            .make()
+        )
+        return asset_repo
