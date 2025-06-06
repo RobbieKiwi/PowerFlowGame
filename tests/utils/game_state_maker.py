@@ -4,7 +4,9 @@ import numpy as np
 
 from src.models.assets import AssetRepo
 from src.models.buses import BusRepo
+from src.models.game_settings import GameSettings
 from src.models.game_state import GameState, Phase
+from src.models.ids import GameId
 from src.models.player import PlayerRepo
 from src.models.transmission import TransmissionRepo
 from tests.utils.repo_maker import PlayerRepoMaker, BusRepoMaker, AssetRepoMaker, TransmissionRepoMaker
@@ -20,14 +22,19 @@ def safe_random_choice(x: list[T]) -> T:
 class GameStateMaker:
     def __init__(self) -> None:
         self.game_id: Optional[int] = None
+        self.game_settings: Optional[GameSettings] = None
         self.phase: Optional[Phase] = None
         self.player_repo: Optional[PlayerRepo] = None
         self.bus_repo: Optional[BusRepo] = None
         self.asset_repo: Optional[AssetRepo] = None
         self.transmission_repo: Optional[TransmissionRepo] = None
 
-    def add_game_id(self, game_id: int) -> Self:
+    def add_game_id(self, game_id: GameId) -> Self:
         self.game_id = game_id
+        return self
+
+    def add_game_settings(self, game_settings: GameSettings) -> Self:
+        self.game_settings = game_settings
         return self
 
     def add_phase(self, phase: Phase) -> Self:
@@ -52,7 +59,9 @@ class GameStateMaker:
 
     def make(self) -> GameState:
         if self.game_id is None:
-            self.game_id = 1
+            self.game_id = GameId(1)
+        if self.game_settings is None:
+            self.game_settings = GameSettings()
         if self.phase is None:
             self.phase = safe_random_choice([p for p in Phase])
         if self.player_repo is None:
@@ -67,7 +76,8 @@ class GameStateMaker:
             )
 
         return GameState(
-            game_id=1,
+            game_id=self.game_id,
+            game_settings=self.game_settings,
             phase=Phase.CONSTRUCTION,
             players=self.player_repo,
             buses=self.bus_repo,
