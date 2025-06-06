@@ -5,6 +5,7 @@ from typing import Self
 @dataclass(frozen=True)
 class GameSettings:
     """A class to hold game settings."""
+
     n_buses: int = 5
     max_rounds: int = 20
     n_ice_cream: int = 5
@@ -31,4 +32,3 @@ class GameSettings:
             initial_funds=simple_dict["initial_funds"],
             max_connections_per_bus=simple_dict["max_connections_per_bus"],
         )
-

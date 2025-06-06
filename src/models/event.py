@@ -9,9 +9,11 @@ from src.models.ids import PlayerId, AssetId
 class Event(ABC):
     pass
 
+
 @dataclass(frozen=True)
 class NewPhase(Event):
     phase: Phase
+
 
 @dataclass(frozen=True)
 class PlayerEvent(Event, ABC):

@@ -4,7 +4,8 @@ from src.models.event import (
     BuyAssetRequest,
     EndTurn,
     UpdateBidResponse,
-    BuyAssetResponse, NewPhase
+    BuyAssetResponse,
+    NewPhase,
 )
 from src.models.game_state import GameState
 
@@ -35,9 +36,9 @@ class Engine:
 
     @classmethod
     def handle_new_phase_event(
-            cls,
-            game_state: GameState,
-            event: NewPhase,
+        cls,
+        game_state: GameState,
+        event: NewPhase,
     ) -> tuple[GameState, list[Event]]:
         """
         Handle a new phase event.
@@ -51,9 +52,9 @@ class Engine:
 
     @classmethod
     def handle_update_bid_event(
-            cls,
-            game_state: GameState,
-            event: UpdateBidRequest,
+        cls,
+        game_state: GameState,
+        event: UpdateBidRequest,
     ) -> tuple[GameState, list[UpdateBidResponse]]:
         """
         Handle an update bid event.
@@ -68,9 +69,9 @@ class Engine:
 
     @classmethod
     def handle_buy_asset_event(
-            cls,
-            game_state: GameState,
-            event: BuyAssetRequest,
+        cls,
+        game_state: GameState,
+        event: BuyAssetRequest,
     ) -> tuple[GameState, list[BuyAssetResponse]]:
         """
         Handle a buy asset event.
@@ -85,9 +86,9 @@ class Engine:
 
     @classmethod
     def handle_end_turn_event(
-            cls,
-            game_state: GameState,
-            event: EndTurn,
+        cls,
+        game_state: GameState,
+        event: EndTurn,
     ) -> tuple[GameState, list[NewPhase]]:
         """
         Handle an end turn event.

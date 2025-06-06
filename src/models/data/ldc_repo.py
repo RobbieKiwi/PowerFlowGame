@@ -3,31 +3,32 @@ from typing import (
     Generic,
     Any,
     Iterator,
-    Self,
     Callable,
     overload,
     Literal,
     Optional,
     Iterable,
+    TypeVar,
 )
 
 import pandas as pd
 
-from src.models.data.light_dc import GenericLightDc
+from src.models.data.light_dc import T_LightDc
 from src.tools.serialization import simplify_type
 from src.tools.typing import T
 
 Condition = dict[str, Any] | Callable[[pd.Series], bool]
+Operator = Literal["or", "and", "not", None]
 
 
-class LdcRepo(Generic[GenericLightDc], ABC):
+class LdcRepo(Generic[T_LightDc], ABC):
     # A dataframe-based repo containing an indexed list of light dataclass objects
 
     @classmethod
     @abstractmethod
-    def _get_dc_type(cls) -> type[GenericLightDc]: ...
+    def _get_dc_type(cls) -> type[T_LightDc]: ...
 
-    def __init__(self, dcs: list[GenericLightDc] | pd.DataFrame) -> None:
+    def __init__(self, dcs: list[T_LightDc] | pd.DataFrame) -> None:
         if isinstance(dcs, list):
             assert len(dcs) > 0
             assert [isinstance(dc, self._get_dc_type()) for dc in dcs]
@@ -50,12 +51,12 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         self._df = df
 
     @overload
-    def __getitem__(self, index: int) -> GenericLightDc: ...
+    def __getitem__(self, index: int) -> T_LightDc: ...
 
     @overload
     def __getitem__(self, index: str) -> pd.Series: ...
 
-    def __getitem__(self, x: int | str) -> GenericLightDc | pd.Series:
+    def __getitem__(self, x: int | str) -> T_LightDc | pd.Series:
         if isinstance(x, str):
             return self.df.loc[:, x]
         assert isinstance(x, int)
@@ -65,7 +66,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         row = self.df.loc[simple_x]
         return self._get_dc_type().from_simple_dict({**row.to_dict(), "id": x})
 
-    def __iter__(self) -> Iterator[GenericLightDc]:
+    def __iter__(self) -> Iterator[T_LightDc]:
         for dc_id in self._df.index:
             yield self[dc_id]
 
@@ -75,7 +76,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}:\n{repr(self._df)}"
 
-    def __add__(self, other: Self | GenericLightDc) -> Self:
+    def __add__(self: T, other: T | T_LightDc) -> T:
         if isinstance(other, self.__class__):
             return self.__class__(pd.concat([self.df, other.df], axis=0))
         elif isinstance(other, self._get_dc_type()):
@@ -88,10 +89,10 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         return len(self._df)
 
     # UPDATE
-    def add(self, x: Self | GenericLightDc) -> Self:
+    def add(self: T, x: T | T_LightDc) -> T:
         return self + x
 
-    def update_frame(self, df: pd.DataFrame) -> Self:
+    def update_frame(self: T, df: pd.DataFrame) -> T:
         return self.from_frame(df)
 
     @property
@@ -110,7 +111,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
     def _filter(
         self,
         condition: Condition,
-        operator: Literal["or", "and"],
+        operator: Operator,
         condition_2: Optional[Condition] = None,
     ) -> pd.Series:
         """
@@ -120,7 +121,7 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         Advanced: A function that is called on the underlying series
         Note that if a function is provided, the function is called on the underlying series which cannot contain
         complex types. Make sure to convert to simple types before using them in the function
-        :param operator: "or" or "and" to combine two conditions
+        :param operator: "or", "and", "not" to combine two conditions or negate the first one
         :param condition_2: A second condition to combine with the first one
         :return: A logical indexer for the given condition or combination of conditions
         >>> self._filter({"bus": BusId(1), "color": Color.Red})
@@ -131,20 +132,29 @@ class LdcRepo(Generic[GenericLightDc], ABC):
 
         """
         if condition_2 is None:
-            return self._condition_to_logical_indexer(condition)
-        elif operator == "and":
+            assert operator in ["not", None], f"Invalid operator for one condition: {operator}"
+        else:
+            assert operator in ["or", "and"], f"Invalid operator for two conditions: {operator}"
+
+        if condition_2 is None:
+            if operator == "not":
+                return ~self._condition_to_logical_indexer(condition)
+            else:
+                return self._condition_to_logical_indexer(condition)
+
+        if operator == "and":
             return self._condition_to_logical_indexer(condition) & self._condition_to_logical_indexer(condition_2)
         elif operator == "or":
             return self._condition_to_logical_indexer(condition) | self._condition_to_logical_indexer(condition_2)
         else:
-            raise ValueError(f"Invalid operator: {operator}. Use 'or' or 'and'.")
+            raise ValueError(f"Invalid operator {operator}")
 
     def filter(
-        self,
+        self: T,
         condition: Condition,
-        operator: Literal["or", "and"] = "or",
+        operator: Operator = None,
         condition_2: Optional[Condition] = None,
-    ) -> Self:
+    ) -> T:
         """
         Returns a copy of the repo filtered using the given condition
         :return: The filtered LdcFrame
@@ -154,11 +164,11 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         return self.__class__(filtered_df)
 
     def drop_items(
-        self,
+        self: T,
         condition: Condition,
-        operator: Literal["or", "and"] = "or",
+        operator: Operator = None,
         condition_2: Optional[Condition] = None,
-    ) -> Self:
+    ) -> T:
         """
         Returns a copy of the repo with elements deleted using the given condition
         :return: A new version of the LdcFrame with the items dropped
@@ -168,17 +178,17 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         index = logical_indexer.loc[logical_indexer].index
         return self.from_frame(self.df.drop(index, axis=0))
 
-    def drop_by_ids(self, ids: Iterable[int]) -> Self:
+    def drop_by_ids(self: T, ids: Iterable[int]) -> T:
         """
         :return: A copy of the repo with the elements with the given ids deleted
         """
         simple_ids = [simplify_type(x) for x in ids]
         return self.from_frame(self.df.drop(simple_ids, axis=0))
 
-    def drop_one(self, item: int) -> Self:
+    def drop_one(self: T, item: int) -> T:
         return self.drop_by_ids([item])
 
-    def as_objs(self) -> list[GenericLightDc]:
+    def as_objs(self) -> list[T_LightDc]:
         return list(self.__iter__())
 
     def to_simple_dict(self) -> dict[str, Any]:
@@ -196,5 +206,8 @@ class LdcRepo(Generic[GenericLightDc], ABC):
         return cls(dcs)
 
     @classmethod
-    def from_frame(cls, df: pd.DataFrame) -> Self:
+    def from_frame(cls: type[T], df: pd.DataFrame) -> T:
         return cls(df)
+
+
+T_LdcRepo = TypeVar("T_LdcRepo", bound=LdcRepo)
