@@ -9,9 +9,11 @@ from src.models.ids import PlayerId, AssetId
 class Event(ABC):
     pass
 
+
 @dataclass(frozen=True)
 class NewPhase(Event):
     phase: Phase
+
 
 @dataclass(frozen=True)
 class PlayerEvent(Event, ABC):
@@ -66,9 +68,10 @@ class BuyAssetRequest(PlayerEvent):
 class BuyAssetResponse(EngineEvent):
     game_state: GameState
     success: bool
+    message: str
     asset_id: AssetId
 
 
 @dataclass(frozen=True)
 class EndTurn(PlayerEvent):
-    asset_id: AssetId
+    asset_id: AssetId  # Check, is the asset_id needed here?
