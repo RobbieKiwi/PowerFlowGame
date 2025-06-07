@@ -48,6 +48,11 @@ class AssetRepo(LdcRepo[AssetInfo]):
     def get_all_for_player(self, player_id: PlayerId) -> Self:
         return self.filter({"owner_player": player_id})
 
+    # UPDATE
+    def change_owner(self, asset_id: AssetId, new_owner: PlayerId) -> Self:
+        self.df.loc[asset_id, "owner_player"] = new_owner
+        return self.update_frame(self.df)
+
     # DELETE
     def delete_for_player(self, player_id: PlayerId) -> Self:
         return self.drop_items({"owner_player": player_id})
