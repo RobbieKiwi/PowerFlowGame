@@ -78,6 +78,7 @@ class Engine:
         :param event: The triggering event
         :return: The new game state and a list of events to be sent to the player interface
         """
+
         # TODO Check if the request is valid (including if the asset is for sale and the player can afford it).
         # TODO Update asset ownership
         # TODO Return a BuyAssetResponse
