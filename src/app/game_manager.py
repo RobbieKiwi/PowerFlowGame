@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable
 
-from src.app.game_repo.base import BaseGameRepo
+from src.app.game_repo.base import BaseGameStateRepo
 from src.models.game_state import GameState
 from src.models.ids import GameId
 from src.models.message import GameToPlayerMessage, PlayerToGameMessage, ToGameMessage, InternalMessage, FromGameMessage
@@ -21,9 +21,12 @@ class CanReceiveToGameMessage(Protocol):
 
 class GameManager:
     def __init__(
-        self, game_repo: BaseGameRepo, game_engine: CanReceiveToGameMessage, front_end: CanReceiveGameToPlayerMessages
+        self,
+        game_repo: BaseGameStateRepo,
+        game_engine: CanReceiveToGameMessage,
+        front_end: CanReceiveGameToPlayerMessages,
     ) -> None:
-        assert isinstance(game_repo, BaseGameRepo)
+        assert isinstance(game_repo, BaseGameStateRepo)
         assert isinstance(game_engine, CanReceiveToGameMessage)
         assert isinstance(front_end, CanReceiveGameToPlayerMessages)
         self.game_repo = game_repo
@@ -32,9 +35,9 @@ class GameManager:
 
     def handle_player_message(self, game_id: GameId, msg: PlayerToGameMessage) -> None:
         # TODO Make this atomic
-        game_state = self.game_repo.get_game(game_id)
+        game_state = self.game_repo.get_game_state(game_id)
         updated_game_state = self.handle_message(game_state=game_state, msg=msg)
-        self.game_repo.update_game(updated_game_state)
+        self.game_repo.update_game_state(updated_game_state)
 
     def handle_message(self, game_state: GameState, msg: ToGameMessage) -> GameState:
         game_state, messages = self.game_engine.handle_message(game_state=game_state, msg=msg)

@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from src.app.game_repo.base import BaseGameRepo
+from src.app.game_repo.base import BaseGameStateRepo
 from src.directories import game_cache_dir
 from src.models.game_state import GameState
 from src.models.ids import GameId
 from src.tools.serialization import serialize, deserialize
 
 
-class FileGameRepo(BaseGameRepo):
+class FileGameStateRepo(BaseGameStateRepo):
     def __init__(self, cache_dir: Path = game_cache_dir) -> None:
         self.cache_dir = cache_dir
 
@@ -15,21 +15,21 @@ class FileGameRepo(BaseGameRepo):
         game_ids = self.list_game_ids()
         return GameId(max(game_ids).as_int() + 1 if game_ids else 0)
 
-    def create_game(self, game: GameState) -> None:
+    def add_game_state(self, game: GameState) -> None:
         path = self.game_id_to_file_path(game.game_id)
         if path.exists():  # Todo make these checks threadsafe
             raise FileExistsError(f"Game with ID {game.game_id} already exists.")
         with open(path, "w") as file:
             file.write(serialize(game))
 
-    def update_game(self, game: GameState) -> None:
+    def update_game_state(self, game: GameState) -> None:
         path = self.game_id_to_file_path(game.game_id)
         if not path.exists():
             raise FileNotFoundError(f"Game with ID {game.game_id} does not exist.")
         with open(path, "w") as file:
             file.write(serialize(game))
 
-    def get_game(self, game_id: GameId) -> GameState:
+    def get_game_state(self, game_id: GameId) -> GameState:
         path = self.game_id_to_file_path(game_id)
         if not path.exists():
             raise FileNotFoundError(f"Game with ID {game_id} does not exist.")
@@ -41,7 +41,7 @@ class FileGameRepo(BaseGameRepo):
         game_files = self.cache_dir.glob("game_*.json")
         return [self.file_path_to_game_id(file_path) for file_path in game_files if file_path.is_file()]
 
-    def delete_game(self, game_id: GameId, missing_ok: bool = True) -> None:
+    def delete_game_state(self, game_id: GameId, missing_ok: bool = True) -> None:
         path = self.game_id_to_file_path(game_id)
         path.unlink(missing_ok=missing_ok)
 
