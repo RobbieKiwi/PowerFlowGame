@@ -71,18 +71,36 @@ class Engine:
             cls,
             game_state: GameState,
             event: BuyAssetRequest,
-    ) -> tuple[GameState, list[BuyAssetResponse]]:
+    ) -> BuyAssetResponse:
         """
         Handle a buy asset event.
         :param game_state: The current state of the game
         :param event: The triggering event
         :return: The new game state and a list of events to be sent to the player interface
         """
+        asset = game_state.assets[event.asset_id]
+        player = game_state.players[event.player_id]
 
-        # TODO Check if the request is valid (including if the asset is for sale and the player can afford it).
-        # TODO Update asset ownership
-        # TODO Return a BuyAssetResponse
-        raise NotImplementedError()
+        success = False
+        if not asset in game_state.assets:
+            message = f"Asset {asset.id} does not exist."
+        elif not asset.is_for_sale:
+            message = f"Asset {asset.id} is not for sale."
+        elif player.money < asset.purchase_cost:
+            message = f"Player {player.id} cannot afford asset {asset.id}."
+        else:
+            success = True
+            message = f"Player {player.id} successfully bought asset {asset.id}."
+            game_state.players.add_money(player.id, -asset.purchase_cost)
+            game_state.assets.change_owner(asset.id, player.id)
+
+        return BuyAssetResponse(
+            player_id=player.id,
+            game_state=game_state,
+            success=success,
+            message=message,
+            asset_id=asset.id
+        )
 
     @classmethod
     def handle_end_turn_event(
