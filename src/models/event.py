@@ -68,6 +68,7 @@ class BuyAssetRequest(PlayerEvent):
 class BuyAssetResponse(EngineEvent):
     game_state: GameState
     success: bool
+    message: str
     asset_id: AssetId
 
 
