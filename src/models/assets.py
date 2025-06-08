@@ -5,6 +5,7 @@ from typing import Self
 from src.models.data.ldc_repo import LdcRepo
 from src.models.data.light_dc import LightDc
 from src.models.ids import AssetId, BusId, PlayerId
+from src.tools.serialization import simplify_type
 
 
 class AssetType(IntEnum):
@@ -50,8 +51,9 @@ class AssetRepo(LdcRepo[AssetInfo]):
 
     # UPDATE
     def change_owner(self, asset_id: AssetId, new_owner: PlayerId) -> Self:
-        self.df.loc[asset_id, "owner_player"] = new_owner
-        return self.update_frame(self.df)
+        df = self.df
+        df.loc[asset_id, "owner_player"] = simplify_type(new_owner)
+        return self.update_frame(df)
 
     # DELETE
     def delete_for_player(self, player_id: PlayerId) -> Self:
