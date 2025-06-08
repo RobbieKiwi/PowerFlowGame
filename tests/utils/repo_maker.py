@@ -107,13 +107,19 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
         return Player(
             id=PlayerId(player_id),
             name=f"Player {player_id}",
-            color=f"#{player_id % 0xFFFFFF:06X}",
+            color=f"#{np.random.randint(0, 0xFFFFFF):06X}",
             money=float(np.random.rand() * 100),  # Just an example of money
             is_having_turn=False,
         )
 
     def _get_repo_type(self) -> type[PlayerRepo]:
         return PlayerRepo
+
+    def _pre_make_hook(self) -> None:
+        # Ensure that there is exactly one bus per non-npc player
+        player_ids = [dc.id for dc in self.dcs]
+        if PlayerId.get_npc() not in player_ids:
+            self.dcs.append(Player(id=PlayerId.get_npc(), name="NPC", color="#000000", money=0.0, is_having_turn=False))
 
 
 class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
@@ -271,6 +277,7 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
         islanded_buses = [bus for bus in self.bus_ids if bus not in mentioned_buses]
 
         for i_bus in islanded_buses:
-            bus1, bus2 = safe_random_choice_multi(self.bus_ids, size=2, replace=False)
-            bus = bus1 if bus1 != i_bus else bus2
-            self.dcs.append(self._make_dc(owner=self._get_random_player_id(), buses=(i_bus, bus)))
+            other_bus = safe_random_choice(x=[b for b in self.bus_ids if b != i_bus])
+            bus_1 = min(i_bus, other_bus)
+            bus_2 = max(i_bus, other_bus)
+            self.dcs.append(self._make_dc(owner=self._get_random_player_id(), buses=(bus_1, bus_2)))
