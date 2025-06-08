@@ -74,4 +74,4 @@ class BuyAssetResponse(EngineEvent):
 
 @dataclass(frozen=True)
 class EndTurn(PlayerEvent):
-    asset_id: AssetId  # Check, is the asset_id needed here?
+    pass
