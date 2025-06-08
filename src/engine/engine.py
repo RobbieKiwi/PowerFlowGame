@@ -80,8 +80,8 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        asset = game_state.assets[event.asset_id]
-        player = game_state.players[event.player_id]
+        asset = game_state.assets[msg.asset_id]
+        player = game_state.players[msg.player_id]
 
         success = False
         if not asset in game_state.assets:
