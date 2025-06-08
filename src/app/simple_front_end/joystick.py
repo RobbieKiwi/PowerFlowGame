@@ -1,0 +1,70 @@
+from typing import Optional, Iterator
+
+from src.app.game_manager import GameManager
+from src.app.game_repo.file_game_repo import FileGameStateRepo
+from src.engine.engine import Engine
+from src.models.game_state import GameState
+from src.models.ids import GameId, PlayerId
+from src.models.message import GameToPlayerMessage, PlayerToGameMessage
+
+
+class MessageHandler:
+    def __init__(self) -> None:
+        self._received_msgs: list[GameToPlayerMessage] = []
+
+    @property
+    def last_msg(self) -> Optional[GameToPlayerMessage]:
+        if not self._received_msgs:
+            return None
+        return self._received_msgs[-1]
+
+    @property
+    def last_state_update(self) -> Optional[GameState]:
+        last_msg = self.last_msg
+        if last_msg is None:
+            return None
+        return last_msg.game_state
+
+    def handle_player_messages(self, msgs: list[GameToPlayerMessage]) -> None:
+        print(f"Received {len(msgs)} messages")
+        for msg in msgs:
+            print(msg)
+            self._received_msgs.append(msg)
+
+
+class Joystick:
+    def __init__(self, game_id_or_players: GameId | list[str]) -> None:
+        game_repo = FileGameStateRepo()
+        engine = Engine()
+        self._message_handler = MessageHandler()
+        self._game_manager = GameManager(game_repo=game_repo, game_engine=engine, front_end=self._message_handler)
+        if isinstance(game_id_or_players, list):
+            self.game_id = self._game_manager.new_game(game_id_or_players)
+        else:
+            self.game_id = game_id_or_players
+        self.current_player = self.latest_game_state.players.player_ids[0]
+
+        def _cycle_players() -> Iterator[PlayerId]:
+            while True:
+                for player_id in self.latest_game_state.players.player_ids:
+                    yield player_id
+
+        self.player_cycler = _cycle_players()
+        self.current_player = next(self.player_cycler)
+
+    def __str__(self) -> str:
+        return f"<Joystick (game_id={self.game_id})>"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def plot_network(self) -> None:
+        """A placeholder for a method that would plot the game state."""
+        print("Plotting game state is not implemented yet.")
+
+    @property
+    def latest_game_state(self) -> GameState:
+        return self._game_manager.game_repo.get_game_state(game_id=self.game_id)
+
+    def send_message(self, message: PlayerToGameMessage) -> None:
+        self._game_manager.handle_player_message(game_id=self.game_id, msg=message)
