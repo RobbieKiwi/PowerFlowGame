@@ -72,7 +72,7 @@ class Engine:
         cls,
         game_state: GameState,
         event: BuyAssetRequest,
-    ) -> BuyAssetResponse:
+    ) -> tuple[GameState, list[BuyAssetResponse]]:
         """
         Handle a buy asset event.
         :param game_state: The current state of the game
@@ -95,9 +95,10 @@ class Engine:
             game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
             game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
 
-        return BuyAssetResponse(
+        response = BuyAssetResponse(
             player_id=player.id, game_state=game_state, success=success, message=message, asset_id=asset.id
         )
+        return game_state, [response]
 
     @classmethod
     def handle_end_turn_event(
