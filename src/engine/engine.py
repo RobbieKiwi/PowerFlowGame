@@ -82,33 +82,36 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        player = game_state.players[msg.player_id]
-        new_players = game_state.players
-        new_assets = game_state.assets
 
-        success = False
+        def make_failed_response(failed_message: str) -> tuple[GameState, list[BuyAssetResponse]]:
+            failed_response = BuyAssetResponse(
+                player_id=msg.player_id,
+                game_state=game_state,
+                success=False,
+                message=failed_message,
+                asset_id=msg.asset_id,
+            )
+            return game_state, [failed_response]
+
+        player = game_state.players[msg.player_id]
+
         if not msg.asset_id in game_state.assets.asset_ids:
-            message = f"Asset {msg.asset_id} does not exist."
+            return make_failed_response("Asset {msg.asset_id} does not exist.")
+
+        asset = game_state.assets[msg.asset_id]
+        if not asset.is_for_sale:
+            return make_failed_response(f"Asset {asset.id} is not for sale.")
+        elif player.money < asset.purchase_cost:
+            return make_failed_response(f"Player {player.id} cannot afford asset {asset.id}.")
         else:
-            asset = game_state.assets[msg.asset_id]
-            if not asset.is_for_sale:
-                message = f"Asset {asset.id} is not for sale."
-            elif player.money < asset.purchase_cost:
-                message = f"Player {player.id} cannot afford asset {asset.id}."
-            else:
-                success = True
-                message = f"Player {player.id} successfully bought asset {asset.id}."
-                new_players = game_state.players.subtract_money(
-                    player_id=player.id, amount=asset.purchase_cost
-                )
-                new_assets = game_state.assets.change_owner(
-                    asset_id=asset.id, new_owner=player.id
-                )
+            message = f"Player {player.id} successfully bought asset {asset.id}."
+            new_players = game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
+            new_assets = game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
 
         new_game_state = replace(game_state, players=new_players, assets=new_assets)
 
         response = BuyAssetResponse(
-            player_id=player.id, game_state=new_game_state, success=success, message=message, asset_id=asset.id
+            player_id=player.id, game_state=new_game_state, success=True, message=message, asset_id=asset.id
         )
         return new_game_state, [response]
 
