@@ -88,6 +88,11 @@ class LdcRepo(Generic[T_LightDc], ABC):
     def __len__(self) -> int:
         return len(self._df)
 
+    def __eq__(self, other: "LdcRepo") -> bool:
+        if not type(self) == type(other):
+            return False
+        return self.df.equals(other.df)
+
     # UPDATE
     def add(self: T, x: T | T_LightDc) -> T:
         return self + x
