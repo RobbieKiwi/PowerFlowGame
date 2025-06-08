@@ -51,7 +51,7 @@ class AssetRepo(LdcRepo[AssetInfo]):
 
     # UPDATE
     def change_owner(self, asset_id: AssetId, new_owner: PlayerId) -> Self:
-        df = self.df
+        df = self.df.copy()
         df.loc[asset_id, "owner_player"] = simplify_type(new_owner)
         return self.update_frame(df)
 

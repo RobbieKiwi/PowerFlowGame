@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from src.models.game_state import GameState
 from src.models.message import (
     UpdateBidRequest,
@@ -82,6 +84,8 @@ class Engine:
         """
         asset = game_state.assets[msg.asset_id]
         player = game_state.players[msg.player_id]
+        new_players = game_state.players
+        new_assets = game_state.assets
 
         success = False
         if not asset in game_state.assets:
@@ -93,13 +97,19 @@ class Engine:
         else:
             success = True
             message = f"Player {player.id} successfully bought asset {asset.id}."
-            game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
-            game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
+            new_players = game_state.players.subtract_money(
+                player_id=player.id, amount=asset.purchase_cost
+            )
+            new_assets = game_state.assets.change_owner(
+                asset_id=asset.id, new_owner=player.id
+            )
+
+        new_game_state = replace(game_state, players=new_players, assets=new_assets)
 
         response = BuyAssetResponse(
-            player_id=player.id, game_state=game_state, success=success, message=message, asset_id=asset.id
+            player_id=player.id, game_state=new_game_state, success=success, message=message, asset_id=asset.id
         )
-        return game_state, [response]
+        return new_game_state, [response]
 
     @classmethod
     def handle_end_turn_message(

@@ -41,7 +41,7 @@ class PlayerRepo(LdcRepo[Player]):
 
     # UPDATE
     def _adjust_money(self, player_id: PlayerId, func: Callable[[float], float]) -> Self:
-        df = self.df
+        df = self.df.copy()
         df.loc[player_id, "money"] = func(df.loc[player_id, "money"])
         return self.update_frame(df)
 
