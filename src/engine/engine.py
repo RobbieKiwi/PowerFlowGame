@@ -82,27 +82,28 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        asset = game_state.assets[msg.asset_id]
         player = game_state.players[msg.player_id]
         new_players = game_state.players
         new_assets = game_state.assets
 
         success = False
-        if not asset in game_state.assets:
-            message = f"Asset {asset.id} does not exist."
-        elif not asset.is_for_sale:
-            message = f"Asset {asset.id} is not for sale."
-        elif player.money < asset.purchase_cost:
-            message = f"Player {player.id} cannot afford asset {asset.id}."
+        if not msg.asset_id in game_state.assets.asset_ids:
+            message = f"Asset {msg.asset_id} does not exist."
         else:
-            success = True
-            message = f"Player {player.id} successfully bought asset {asset.id}."
-            new_players = game_state.players.subtract_money(
-                player_id=player.id, amount=asset.purchase_cost
-            )
-            new_assets = game_state.assets.change_owner(
-                asset_id=asset.id, new_owner=player.id
-            )
+            asset = game_state.assets[msg.asset_id]
+            if not asset.is_for_sale:
+                message = f"Asset {asset.id} is not for sale."
+            elif player.money < asset.purchase_cost:
+                message = f"Player {player.id} cannot afford asset {asset.id}."
+            else:
+                success = True
+                message = f"Player {player.id} successfully bought asset {asset.id}."
+                new_players = game_state.players.subtract_money(
+                    player_id=player.id, amount=asset.purchase_cost
+                )
+                new_assets = game_state.assets.change_owner(
+                    asset_id=asset.id, new_owner=player.id
+                )
 
         new_game_state = replace(game_state, players=new_players, assets=new_assets)
 
