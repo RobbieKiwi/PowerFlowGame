@@ -103,10 +103,10 @@ class Engine:
             return make_failed_response(f"Asset {asset.id} is not for sale.")
         elif player.money < asset.purchase_cost:
             return make_failed_response(f"Player {player.id} cannot afford asset {asset.id}.")
-        else:
-            message = f"Player {player.id} successfully bought asset {asset.id}."
-            new_players = game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
-            new_assets = game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
+
+        message = f"Player {player.id} successfully bought asset {asset.id}."
+        new_players = game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
+        new_assets = game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
 
         new_game_state = replace(game_state, players=new_players, assets=new_assets)
 
