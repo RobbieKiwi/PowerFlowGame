@@ -91,8 +91,8 @@ class Engine:
         else:
             success = True
             message = f"Player {player.id} successfully bought asset {asset.id}."
-            game_state.players.add_money(player.id, -asset.purchase_cost)
-            game_state.assets.change_owner(asset.id, player.id)
+            game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
+            game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
 
         return BuyAssetResponse(
             player_id=player.id,

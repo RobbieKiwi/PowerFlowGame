@@ -46,8 +46,16 @@ class PlayerRepo(LdcRepo[Player]):
         return self.update_frame(df)
 
     def add_money(self, player_id: PlayerId, amount: float) -> Self:
-        # An example of how to mutate money
+        # Add an amount of money to a player's balance
         return self._adjust_money(player_id, lambda x: x + amount)
+
+    def subtract_money(self, player_id: PlayerId, amount: float) -> Self:
+        # Subtract an amount of money from a player's balance
+        return self._adjust_money(player_id, lambda x: x - amount)
+
+    def transfer_money(self, from_player: PlayerId, to_player: PlayerId, amount: float) -> Self:
+        # Transfer money from one player to another
+        return self.add_money(to_player, amount).subtract_money(from_player, amount)
 
     # DELETE
     def delete_player(self, player_id: PlayerId) -> Self:
