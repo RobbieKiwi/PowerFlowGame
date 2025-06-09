@@ -24,4 +24,4 @@ class LightDc:
         return cls(**init_dict)  # noqa
 
 
-GenericLightDc = TypeVar("GenericLightDc", bound=LightDc)
+T_LightDc = TypeVar("T_LightDc", bound=LightDc)

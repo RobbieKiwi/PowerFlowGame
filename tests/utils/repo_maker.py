@@ -6,24 +6,15 @@ import numpy as np
 
 from src.models.assets import AssetRepo, AssetInfo, AssetType
 from src.models.buses import Bus, BusRepo
-from src.models.data.ldc_repo import LdcRepo
-from src.models.data.light_dc import GenericLightDc as T_LightDc
+from src.models.data.ldc_repo import T_LdcRepo
+from src.models.data.light_dc import T_LightDc
 from src.models.ids import PlayerId, AssetId, BusId, TransmissionId
 from src.models.player import PlayerRepo, Player
 from src.models.transmission import TransmissionRepo, TransmissionInfo
-
-T = TypeVar('T')
-T_LdcRepo = TypeVar('T_LdcRepo', bound=LdcRepo)
+from tests.utils.random_choice import random_choice, random_choice_multi
 
 
-def safe_random_choice(x: list[T]) -> T:
-    ix = np.random.randint(len(x))
-    return x[ix]
-
-
-def safe_random_choice_multi(x: list[T], size: int, **kwargs) -> list[T]:
-    ixs = np.random.choice(a=[k for k in range(len(x))], size=size, **kwargs)
-    return [x[ix] for ix in ixs]
+T_RepoMaker = TypeVar("T_RepoMaker", bound="RepoMaker")
 
 
 class RepoMaker(Generic[T_LdcRepo, T_LightDc]):
@@ -42,14 +33,14 @@ class RepoMaker(Generic[T_LdcRepo, T_LightDc]):
     def _pre_make_hook(self) -> None:
         pass
 
-    def __add__(self, dc: T_LightDc | list[T_LightDc]) -> Self:
+    def __add__(self: T_RepoMaker, dc: T_LightDc | list[T_LightDc]) -> T_RepoMaker:
         if isinstance(dc, list):
             self.dcs.extend(dc)
         else:
             self.dcs.append(dc)
         return self
 
-    def add_n_random(self, n: int) -> Self:
+    def add_n_random(self: T_RepoMaker, n: int) -> T_RepoMaker:
         new_dcs = [self._make_dc() for _ in range(n)]
         self.dcs.extend(new_dcs)
         return self
@@ -147,7 +138,12 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
     def make_quick(
         cls, n_normal_assets: int = 3, player_ids: Optional[list[PlayerId]] = None, bus_repo: Optional[BusRepo] = None
     ) -> AssetRepo:
-        return cls(player_ids=player_ids, bus_repo=bus_repo).add_n_random(n_normal_assets).make()
+        return (
+            cls(player_ids=player_ids, bus_repo=bus_repo)
+            .add_n_random(n_normal_assets)
+            .add_asset(owner=PlayerId.get_npc(), is_for_sale=True)
+            .make()
+        )
 
     def __init__(self, player_ids: Optional[list[PlayerId]] = None, bus_repo: Optional[BusRepo] = None) -> None:
         super().__init__()
@@ -171,6 +167,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        is_for_sale: Optional[bool] = None,
     ) -> Self:
         if asset is not None:
             for x in [cat, owner, bus]:
@@ -178,32 +175,36 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             self.dcs.append(asset)
             return self
 
-        dc = self._make_dc(cat=cat, owner=owner, bus=bus)
+        dc = self._make_dc(cat=cat, owner=owner, bus=bus, is_for_sale=is_for_sale)
         self.dcs.append(dc)
         return self
 
     def _get_random_player_id(self) -> PlayerId:
-        return safe_random_choice(self.player_ids) if safe_random_choice([True, False]) else PlayerId.get_npc()
+        return random_choice(self.player_ids) if random_choice([True, False]) else PlayerId.get_npc()
 
     def _get_random_bus_id(self) -> BusId:
-        return safe_random_choice(self._bus_repo.bus_ids)
+        return random_choice(self._bus_repo.bus_ids)
 
     def _make_dc(
         self,
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        is_for_sale: Optional[bool] = None,
     ) -> AssetInfo:
         asset_id = next(self.id_counter)
 
         if cat is None:
-            cat = safe_random_choice(["Generator", "Load"])
+            cat = random_choice(["Generator", "Load"])
 
         if owner is None:
             owner = self._get_random_player_id()
 
         if bus is None:
             bus = self._get_random_bus_id()
+
+        if is_for_sale is None:
+            is_for_sale = random_choice([True, False]) if owner is PlayerId.get_npc() else False
 
         asset_type: AssetType = {
             "Generator": AssetType.GENERATOR,
@@ -226,7 +227,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             bus=bus,
             power_expected=float(np.random.rand() * 100),
             power_std=float(np.random.rand() * 10),
-            is_for_sale=safe_random_choice([True, False]) if owner is PlayerId.get_npc() else False,
+            is_for_sale=is_for_sale,
             purchase_cost=float(np.random.rand() * 1000),
             operating_cost=float(np.random.rand() * 100),
             marginal_price=marginal_price,
@@ -238,8 +239,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         return AssetRepo
 
     def _pre_make_hook(self) -> None:
-        ice_cream_buses = [bus for bus in self._bus_repo if bus.is_ice_cream_bus]
-        for bus in ice_cream_buses:
+        for bus in self._bus_repo.ice_cream_buses:
             self.dcs.append(self._make_dc(cat="IceCream", bus=bus.id, owner=bus.player_id))
 
 
@@ -261,10 +261,10 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
         self.bus_ids = bus_ids
 
     def _get_random_player_id(self) -> PlayerId:
-        return safe_random_choice(self.player_ids) if safe_random_choice([True, False]) else PlayerId.get_npc()
+        return random_choice(self.player_ids) if random_choice([True, False]) else PlayerId.get_npc()
 
     def _get_random_bus_pair(self) -> tuple[BusId, BusId]:
-        bus1, bus2 = safe_random_choice_multi(x=self.bus_ids, size=2, replace=False)
+        bus1, bus2 = random_choice_multi(x=self.bus_ids, size=2, replace=False)
         return min(bus1, bus2), max(bus1, bus2)
 
     def _make_dc(
@@ -284,8 +284,8 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
             reactance=float(np.random.rand() * 10 + 1),
             health=int(np.random.randint(1, 6)),
             operating_cost=float(np.random.rand() * 100),
-            is_for_sale=safe_random_choice([True, False]),
-            purchase_cost=float(np.random.rand() * 1000) if safe_random_choice([True, False]) else 0.0,
+            is_for_sale=random_choice([True, False]),
+            purchase_cost=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
         )
 
     def _get_repo_type(self) -> type[TransmissionRepo]:
@@ -297,7 +297,7 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
         islanded_buses = [bus for bus in self.bus_ids if bus not in mentioned_buses]
 
         for i_bus in islanded_buses:
-            other_bus = safe_random_choice(x=[b for b in self.bus_ids if b != i_bus])
-            bus_1 = min(i_bus, other_bus)
-            bus_2 = max(i_bus, other_bus)
-            self.dcs.append(self._make_dc(owner=self._get_random_player_id(), buses=(bus_1, bus_2)))
+            other_bus = random_choice([b for b in self.bus_ids if b != i_bus])
+            bus1 = min(i_bus, other_bus)
+            bus2 = max(i_bus, other_bus)
+            self.dcs.append(self._make_dc(owner=self._get_random_player_id(), buses=(bus1, bus2)))

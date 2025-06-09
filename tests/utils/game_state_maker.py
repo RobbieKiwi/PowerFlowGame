@@ -1,6 +1,4 @@
-from typing import Optional, Self, TypeVar
-
-import numpy as np
+from typing import Optional, Self
 
 from src.models.assets import AssetRepo
 from src.models.buses import BusRepo
@@ -9,14 +7,8 @@ from src.models.game_state import GameState, Phase
 from src.models.ids import GameId
 from src.models.player import PlayerRepo
 from src.models.transmission import TransmissionRepo
+from tests.utils.random_choice import random_choice
 from tests.utils.repo_maker import PlayerRepoMaker, BusRepoMaker, AssetRepoMaker, TransmissionRepoMaker
-
-T = TypeVar("T")
-
-
-def safe_random_choice(x: list[T]) -> T:
-    ix = np.random.randint(len(x))
-    return x[ix]
 
 
 class GameStateMaker:
@@ -63,7 +55,7 @@ class GameStateMaker:
         if self.game_settings is None:
             self.game_settings = GameSettings()
         if self.phase is None:
-            self.phase = safe_random_choice([p for p in Phase])
+            self.phase = random_choice([p for p in Phase])
         if self.player_repo is None:
             self.player_repo = PlayerRepoMaker.make_quick()
         if self.bus_repo is None:
