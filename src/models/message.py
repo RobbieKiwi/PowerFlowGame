@@ -81,9 +81,10 @@ class BuyAssetRequest(PlayerToGameMessage):
 class BuyAssetResponse(GameToPlayerMessage):
     game_state: GameState
     success: bool
+    message: str
     asset_id: AssetId
 
 
 @dataclass(frozen=True)
 class EndTurn(PlayerToGameMessage):
-    asset_id: AssetId
+    pass
