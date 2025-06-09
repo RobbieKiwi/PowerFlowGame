@@ -37,32 +37,40 @@ class Joystick:
     def __init__(self, game_id: GameId) -> None:
         self._message_handler = MessageHandler()
         self._game_manager = self._make_game_manager(handler=self._message_handler)
-        self.game_id = game_id
-        self.current_player = self.latest_game_state.players.player_ids[0]
+        self._game_id = game_id
 
         def _cycle_players() -> Iterator[PlayerId]:
             while True:
                 for player_id in self.latest_game_state.players.player_ids:
                     yield player_id
 
-        self.player_cycler = _cycle_players()
-        self.current_player = next(self.player_cycler)
+        self._player_cycler = _cycle_players()
+        self._current_player_id = PlayerId.get_npc()
+        self.change_player()
 
     def __str__(self) -> str:
-        return f"<Joystick (game_id={self.game_id})>"
+        return f"<Joystick (game_id={self._game_id}, current_player={self.current_player})>"
 
     def __repr__(self) -> str:
         return str(self)
+
+    @property
+    def current_player(self) -> str:
+        return self.latest_game_state.players[self._current_player_id].name
+
+    def change_player(self) -> None:
+        self._current_player_id = next(self._player_cycler)
+        print(f"Now it is {self.current_player}'s turn")
 
     def plot_network(self) -> None:
         GridPlotter().plot(self.latest_game_state)
 
     @property
     def latest_game_state(self) -> GameState:
-        return self._game_manager.game_repo.get_game_state(game_id=self.game_id)
+        return self._game_manager.game_repo.get_game_state(game_id=self._game_id)
 
     def send_message(self, message: PlayerToGameMessage) -> None:
-        self._game_manager.handle_player_message(game_id=self.game_id, msg=message)
+        self._game_manager.handle_player_message(game_id=self._game_id, msg=message)
 
     @staticmethod
     def _make_game_manager(handler: Optional[MessageHandler] = None) -> GameManager:
