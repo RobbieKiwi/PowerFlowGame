@@ -200,8 +200,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         return AssetRepo
 
     def _pre_make_hook(self) -> None:
-        ice_cream_buses = [bus for bus in self._bus_repo if bus.is_ice_cream_bus]
-        for bus in ice_cream_buses:
+        for bus in self._bus_repo.ice_cream_buses:
             self.dcs.append(self._make_dc(cat="IceCream", bus=bus.id, owner=bus.player_id))
 
 

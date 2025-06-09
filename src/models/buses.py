@@ -35,6 +35,11 @@ class BusRepo(LdcRepo[Bus]):
     def player_bus_ids(self) -> list[BusId]:
         return self.filter(operator="not", condition={"player_id": PlayerId.get_npc()}).bus_ids
 
+    @property
+    def ice_cream_buses(self) -> list[Bus]:
+        """Get all buses that are ice cream buses."""
+        return [self[b] for b in self.player_bus_ids]
+
     def get_bus_for_player(self, player_id: PlayerId) -> Bus:
         """Get the bus for a specific player."""
         player_buses = self.filter({"player_id": player_id})
