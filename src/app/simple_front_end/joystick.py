@@ -34,15 +34,10 @@ class MessageHandler:
 
 
 class Joystick:
-    def __init__(self, game_id_or_players: GameId | list[str]) -> None:
-        game_repo = FileGameStateRepo()
-        engine = Engine()
+    def __init__(self, game_id: GameId) -> None:
         self._message_handler = MessageHandler()
-        self._game_manager = GameManager(game_repo=game_repo, game_engine=engine, front_end=self._message_handler)
-        if isinstance(game_id_or_players, list):
-            self.game_id = self._game_manager.new_game(game_id_or_players)
-        else:
-            self.game_id = game_id_or_players
+        self._game_manager = self._make_game_manager(handler=self._message_handler)
+        self.game_id = game_id
         self.current_player = self.latest_game_state.players.player_ids[0]
 
         def _cycle_players() -> Iterator[PlayerId]:
@@ -68,3 +63,22 @@ class Joystick:
 
     def send_message(self, message: PlayerToGameMessage) -> None:
         self._game_manager.handle_player_message(game_id=self.game_id, msg=message)
+
+    @staticmethod
+    def _make_game_manager(handler: Optional[MessageHandler] = None) -> GameManager:
+        """
+        Create a new GameManager instance.
+        :param handler: Optional MessageHandler to use
+        :return: A new GameManager instance
+        """
+        game_repo = FileGameStateRepo()
+        engine = Engine()
+        if handler is None:
+            handler = MessageHandler()
+        return GameManager(game_repo=game_repo, game_engine=engine, front_end=handler)
+
+    @classmethod
+    def new_game(cls, player_names: list[str]) -> "Joystick":
+        game_manager = cls._make_game_manager()
+        game_id = game_manager.new_game(player_names=player_names)
+        return cls(game_id=game_id)

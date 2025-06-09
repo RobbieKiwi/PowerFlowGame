@@ -10,7 +10,7 @@ from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
 from src.models.buses import Bus
 from src.models.player import Player
 
-SocketSide = Literal["tr", "bl"]
+SocketSide = Literal["tr", "bl"]  # Top Right or Bottom Left
 
 
 class SocketProvider:
