@@ -39,7 +39,7 @@ class SocketProvider:
                 preferred_side = "bl"
 
         if self._has_remaining_sockets(preferred_side):
-            if preferred_side is "tr":
+            if preferred_side == "tr":
                 socket = self._tr_sockets[self._tr_assigned]
                 self._tr_assigned += 1
             else:
