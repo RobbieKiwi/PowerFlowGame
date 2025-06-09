@@ -2,6 +2,7 @@ from typing import Optional, Iterator
 
 from src.app.game_manager import GameManager
 from src.app.game_repo.file_game_repo import FileGameStateRepo
+from src.app.simple_front_end.plotting.grid_plotter import GridPlotter
 from src.engine.engine import Engine
 from src.models.game_state import GameState
 from src.models.ids import GameId, PlayerId
@@ -59,8 +60,7 @@ class Joystick:
         return str(self)
 
     def plot_network(self) -> None:
-        """A placeholder for a method that would plot the game state."""
-        print("Plotting game state is not implemented yet.")
+        GridPlotter().plot(self.latest_game_state)
 
     @property
     def latest_game_state(self) -> GameState:
