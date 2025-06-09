@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.app.simple_front_end.plot_network import GridPlotter
+from src.app.simple_front_end.plotting.grid_plotter import GridPlotter
 from tests.utils.game_state_maker import GameStateMaker
 from tests.utils.repo_maker import BusRepoMaker, TransmissionRepoMaker, PlayerRepoMaker
 
@@ -22,5 +22,4 @@ class TestPlotNetwork(TestCase):
             .add_transmission_repo(transmission_repo=transmission_repo)
             .make()
         )
-        print(game_state.buses.df)
         GridPlotter().plot(game_state=game_state)

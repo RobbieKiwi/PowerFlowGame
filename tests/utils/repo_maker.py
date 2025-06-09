@@ -76,13 +76,31 @@ class BusRepoMaker(RepoMaker[BusRepo, Bus]):
         return self
 
     def _make_dc(self, player_id: PlayerId = PlayerId.get_npc()) -> Bus:
+        map_width: float = 30.0
+        half_width = map_width / 2
+
+        centre_x, centre_y = self._get_current_centre()
+
+        centre_rand = lambda: 2 * (np.random.rand() - 0.5)
+
+        x = -centre_x + abs(half_width - centre_x) * centre_rand()
+        y = -centre_y + abs(half_width - centre_y) * centre_rand()
+
         bus_id = next(self.id_counter)
         return Bus(
             id=BusId(bus_id),
-            x=float(np.random.rand() * 100),
-            y=float(np.random.rand() * 100),
+            x=x,
+            y=y,
             player_id=player_id,
         )
+
+    def _get_current_centre(self) -> tuple[float, float]:
+        """Get the current centre of the buses."""
+        if not self.dcs:
+            return 0.0, 0.0
+        x_coords = [bus.x for bus in self.dcs]
+        y_coords = [bus.y for bus in self.dcs]
+        return float(np.mean(x_coords)), float(np.mean(y_coords))
 
     def _get_repo_type(self) -> type[BusRepo]:
         return BusRepo
