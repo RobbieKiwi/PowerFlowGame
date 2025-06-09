@@ -21,10 +21,10 @@ class SocketProvider:
         self._bl_assigned = 0
 
     def __str__(self) -> str:
-        return f"<SocketProvider>"
+        return "<SocketProvider>"
 
     def __repr__(self) -> str:
-        return f"<SocketProvider>"
+        return "<SocketProvider>"
 
     def get_socket(self, preferred_side: Optional[SocketSide] = None) -> Point:
         if not self._has_remaining_sockets():

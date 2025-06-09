@@ -81,7 +81,9 @@ class BusRepoMaker(RepoMaker[BusRepo, Bus]):
 
         centre_x, centre_y = self._get_current_centre()
 
-        centre_rand = lambda: 2 * (np.random.rand() - 0.5)
+        def centre_rand() -> float:
+            """Generate a random number between -0.5 and 0.5."""
+            return 2 * (np.random.rand() - 0.5)
 
         x = -centre_x + abs(half_width - centre_x) * centre_rand()
         y = -centre_y + abs(half_width - centre_y) * centre_rand()
