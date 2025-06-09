@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from functools import cached_property
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
@@ -28,7 +27,10 @@ class PlotAsset(PlotObject):
             a_type = "Load"
         else:
             raise ValueError(f"Unknown asset type: {self.asset.asset_type}")
-        return f"{a_type}{self.asset.id}"
+        title = f"{a_type}{self.asset.id}"
+        if self.asset.is_ice_cream:
+            title += " (Ice Cream)"
+        return title
 
     @property
     def color(self) -> str:
@@ -55,14 +57,15 @@ class PlotAsset(PlotObject):
         theta = np.linspace(0, 2 * np.pi, 100)
         x = self.centre.x + self.radius * np.cos(theta)
         y = self.centre.y + self.radius * np.sin(theta)
-        # append one value to the array
         x = np.append(x, self.centre.x)
         y = np.append(y, self.centre.y)
 
         if self.asset.asset_type is AssetType.GENERATOR:
             text = "G"
+        elif self.asset.asset_type is AssetType.LOAD:
+            text = "I" if self.asset.is_ice_cream else "L"
         else:
-            text = "L"
+            raise ValueError(f"Unknown asset type: {self.asset.asset_type}")
 
         main = go.Scatter(
             x=x,

@@ -1,9 +1,10 @@
 import plotly.graph_objects as go
 
-from src.app.simple_front_end.plotting.base_plot_object import PlotObject
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject, Point
 from src.app.simple_front_end.plotting.po_asset import PlotAsset
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.app.simple_front_end.plotting.po_line import PlotTxLine
+from src.app.simple_front_end.plotting.po_player_legend import PlayerLegend
 from src.models.game_state import GameState
 from src.models.ids import BusId
 
@@ -50,4 +51,14 @@ class GridPlotter:
             bus = bus_dict[asset.bus]
             assets.append(PlotAsset(asset=asset, owner=owner, bus=bus))
 
-        return buses + txs + assets
+        # TODO Add playable map area to state and use that to determine legend location
+        legend_location = Point(x=21, y=19)
+        offset_vector = Point(x=0, y=1)
+
+        player_legends: list[PlayerLegend] = []
+        players = sorted(game_state.players.as_objs(), key=lambda p: p.id, reverse=True)
+        for k, player in enumerate(players):
+            location = legend_location + offset_vector * k
+            player_legends.append(PlayerLegend(player=player, location=location))
+
+        return buses + txs + assets + player_legends
