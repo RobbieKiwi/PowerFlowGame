@@ -4,6 +4,7 @@ from typing import Self, Optional
 
 from src.models.assets import AssetRepo
 from src.models.buses import BusRepo
+from src.models.game_settings import GameSettings
 from src.models.ids import (
     PlayerId,
     GameId,
@@ -11,7 +12,6 @@ from src.models.ids import (
 from src.models.market_coupling_result import MarketCouplingResult
 from src.models.player import PlayerRepo
 from src.models.transmission import TransmissionRepo
-from src.models.game_settings import GameSettings
 from src.tools.serialization import (
     simplify_type,
     un_simplify_type,
@@ -50,7 +50,9 @@ class GameState:
             "buses": self.buses.to_simple_dict(),
             "assets": self.assets.to_simple_dict(),
             "transmission": self.transmission.to_simple_dict(),
-            "market_coupling_result": self.market_coupling_result.to_simple_dict(),
+            "market_coupling_result": (
+                self.market_coupling_result.to_simple_dict() if self.market_coupling_result else None
+            ),
         }
 
     @classmethod
@@ -63,5 +65,9 @@ class GameState:
             buses=BusRepo.from_simple_dict(simple_dict["buses"]),
             assets=AssetRepo.from_simple_dict(simple_dict["assets"]),
             transmission=TransmissionRepo.from_simple_dict(simple_dict["transmission"]),
-            market_coupling_result=MarketCouplingResult.from_simple_dict(simple_dict["market_coupling_result"]),
+            market_coupling_result=(
+                MarketCouplingResult.from_simple_dict(simple_dict["market_coupling_result"])
+                if simple_dict.get("market_coupling_result")
+                else None
+            ),
         )

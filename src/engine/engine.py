@@ -96,7 +96,7 @@ class Engine:
         player = game_state.players[msg.player_id]
 
         if not msg.asset_id in game_state.assets.asset_ids:
-            return make_failed_response("Asset {msg.asset_id} does not exist.")
+            return make_failed_response(f"Asset {msg.asset_id} does not exist.")
 
         asset = game_state.assets[msg.asset_id]
         if not asset.is_for_sale:
