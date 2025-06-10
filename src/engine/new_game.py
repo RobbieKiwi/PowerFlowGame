@@ -1,18 +1,20 @@
-from src.models.game_settings import GameSettings
-from src.models.ids import GameId, PlayerId, BusId, AssetId, TransmissionId
-from src.models.game_state import GameState, Phase
-from src.models.player import Player, PlayerRepo
-from src.models.buses import BusRepo, Bus
-from src.models.assets import AssetRepo, AssetInfo
-from src.models.transmission import TransmissionRepo, TransmissionInfo
-from typing import List, Dict
+from typing import List, Dict, Optional
 
+from matplotlib import cm
+
+from src.models.assets import AssetRepo
+from src.models.buses import BusRepo, Bus
+from src.models.game_settings import GameSettings
+from src.models.game_state import GameState, Phase
+from src.models.ids import GameId, PlayerId, BusId
+from src.models.player import Player, PlayerRepo
+from src.models.transmission import TransmissionRepo
 
 __all__ = ["create_new_game"]
 
 
 def create_new_game(
-    game_id: GameId, settings: GameSettings, player_names: List[str], player_colors: List[str]
+    game_id: GameId, settings: GameSettings, player_names: list[str], player_colors: Optional[list[str]] = None
 ) -> GameState:
     """
     Create a new game state with the given game ID and settings.
@@ -23,20 +25,26 @@ def create_new_game(
     :return: A new GameState instance with the provided game ID and settings.
     """
     n_players = len(player_names)
+
+    if player_colors is None:
+        color_map = cm.get_cmap('hsv', n_players)
+        player_colors = [color_map(i / n_players)[:3] for i in range(n_players)]
+        player_colors = [f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}" for r, g, b in player_colors]
+
     new_game = GameState(
         game_id=game_id,
         game_settings=settings,
         phase=Phase(0),
-        players=_initialize_players_repo(player_names, player_colors, settings),
-        buses=_initialize_buses_repo(n_players, settings),
-        assets=_initialize_assets_repo(),
-        transmission=_initialize_transmission_repo(),
+        players=initialize_players_repo(names=player_names, colors=player_colors, settings=settings),
+        buses=initialize_buses_repo(n_players=n_players, settings=settings),
+        assets=initialize_assets_repo(),
+        transmission=initialize_transmission_repo(),
         market_coupling_result=None,
     )
     return new_game
 
 
-def _initialize_players_repo(names: List[str], colors: List[str], settings: GameSettings) -> PlayerRepo:
+def initialize_players_repo(names: List[str], colors: List[str], settings: GameSettings) -> PlayerRepo:
     """
     Create a PlayerRepo with the given player names and colors.
     :param names: List of player names.
@@ -46,21 +54,23 @@ def _initialize_players_repo(names: List[str], colors: List[str], settings: Game
     """
     assert len(names) == len(colors), "Number of names and colors must match the number of players."
 
+    ids = [PlayerId(i) for i in range(len(names))]
+
     players = [
         Player(
-            id=PlayerId(i),
+            id=player_id,
             name=name,
-            color=colors[i],
+            color=color,
             money=settings.initial_funds,
             is_having_turn=False,  # Initial state, no player has a turn yet
         )
-        for i, name in enumerate(names, start=1)
+        for player_id, name, color in zip(ids, names, colors)
     ]
 
     return PlayerRepo(players)
 
 
-def _initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
+def initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
     """
     Create an initial BusRepo.
     :return: A new BusRepo instance.
@@ -85,7 +95,7 @@ def _initialize_buses_repo(n_players: int, settings: GameSettings) -> BusRepo:
     return BusRepo(buses)
 
 
-def _initialize_assets_repo() -> AssetRepo:
+def initialize_assets_repo() -> AssetRepo:
     """
     Create an initial AssetRepo.
     :return: A new AssetRepo instance.
@@ -94,7 +104,7 @@ def _initialize_assets_repo() -> AssetRepo:
     raise NotImplementedError("Initial asset configuration not implemented.")
 
 
-def _initialize_transmission_repo() -> TransmissionRepo:
+def initialize_transmission_repo() -> TransmissionRepo:
     """
     Create an initial TransmissionRepo.
     :return: A new TransmissionRepo instance.

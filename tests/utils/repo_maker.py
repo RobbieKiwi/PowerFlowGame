@@ -67,13 +67,35 @@ class BusRepoMaker(RepoMaker[BusRepo, Bus]):
         return self
 
     def _make_dc(self, player_id: PlayerId = PlayerId.get_npc()) -> Bus:
+        # TODO Add playable map area to state, move point model from front end to core models
+
+        map_width: float = 20.0
+        half_width = map_width / 2
+
+        centre_x, centre_y = self._get_current_centre()
+
+        def centre_rand() -> float:
+            """Generate a random number between -0.5 and 0.5."""
+            return 2 * (np.random.rand() - 0.5)
+
+        x = -centre_x + abs(half_width - centre_x) * centre_rand()
+        y = -centre_y + abs(half_width - centre_y) * centre_rand()
+
         bus_id = next(self.id_counter)
         return Bus(
             id=BusId(bus_id),
-            x=float(np.random.rand() * 100),
-            y=float(np.random.rand() * 100),
+            x=x,
+            y=y,
             player_id=player_id,
         )
+
+    def _get_current_centre(self) -> tuple[float, float]:
+        """Get the current centre of the buses."""
+        if not self.dcs:
+            return 0.0, 0.0
+        x_coords = [bus.x for bus in self.dcs]
+        y_coords = [bus.y for bus in self.dcs]
+        return float(np.mean(x_coords)), float(np.mean(y_coords))
 
     def _get_repo_type(self) -> type[BusRepo]:
         return BusRepo
@@ -98,13 +120,19 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
         return Player(
             id=PlayerId(player_id),
             name=f"Player {player_id}",
-            color=f"#{player_id % 0xFFFFFF:06X}",
+            color=f"#{np.random.randint(0, 0xFFFFFF):06X}",
             money=float(np.random.rand() * 100),  # Just an example of money
             is_having_turn=False,
         )
 
     def _get_repo_type(self) -> type[PlayerRepo]:
         return PlayerRepo
+
+    def _pre_make_hook(self) -> None:
+        # Ensure that there is exactly one bus per non-npc player
+        player_ids = [dc.id for dc in self.dcs]
+        if PlayerId.get_npc() not in player_ids:
+            self.dcs.append(Player(id=PlayerId.get_npc(), name="NPC", color="#000000", money=0.0, is_having_turn=False))
 
 
 class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
