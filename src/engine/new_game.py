@@ -291,7 +291,7 @@ class BaseGameInitializer(ABC):
         raise NotImplementedError("Initial transmission configuration not implemented.")
 
 
-class DefaultInitializer(BaseGameInitializer):
+class DefaultGameInitializer(BaseGameInitializer):
     """
     Concrete implementation of NewGameInitializer for initializing game components with default settings.
     This class provides methods to create initial repositories for buses, assets, and transmission.
