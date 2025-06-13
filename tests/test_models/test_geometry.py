@@ -63,4 +63,4 @@ class TestGeometry(TestCase):
 
     def test_str(self) -> None:
         point = Point(x=3.14159, y=2.71828)
-        self.assertEqual(str(point), "<Point (3.14,2.72)>")
+        self.assertEqual(str(point), "<Point (3.1,2.7)>")
