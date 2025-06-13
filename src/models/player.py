@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Self, Callable
 
+from src.models.colors import Color
 from src.models.data.ldc_repo import LdcRepo
 from src.models.data.light_dc import LightDc
 from src.models.ids import PlayerId
@@ -18,6 +20,11 @@ class Player(LightDc):
         assert (
             self.color.startswith("#") and len(self.color) == 7 and int(self.color[1:], 16) < 0xFFFFFF
         ), "Invalid color format"
+
+    @cached_property
+    def color_obj(self) -> Color:
+        # TODO change the main color property to a color object
+        return Color.from_hex(self.color)
 
 
 class PlayerRepo(LdcRepo[Player]):

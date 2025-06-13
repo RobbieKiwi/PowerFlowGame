@@ -5,6 +5,8 @@ import numpy as np
 import plotly.graph_objs as go
 from plotly.graph_objs import Scatter
 
+from src.models.colors import Color
+
 
 @dataclass(frozen=True)
 class Point:
@@ -54,7 +56,7 @@ class PlotObject(ABC):
 
     @property
     @abstractmethod
-    def color(self) -> str:
+    def color(self) -> Color:
         pass
 
     @property
@@ -82,7 +84,7 @@ class PlotObject(ABC):
             mode="markers",
             marker={
                 "size": 10,
-                "color": self.color,
+                "color": self.color.hex_str,
                 "symbol": "circle",
                 "line": {"width": 0.0},
                 "opacity": 0.0,  # Make the marker invisible
