@@ -5,10 +5,11 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.app.simple_front_end.plotting.colors import get_contrasting_color
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.models.assets import AssetInfo, AssetType
+from src.models.geometry import Point
 from src.models.player import Player
 
 

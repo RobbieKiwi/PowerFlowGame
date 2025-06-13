@@ -6,8 +6,9 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.models.buses import Bus
+from src.models.geometry import Point
 from src.models.player import Player
 
 SocketSide = Literal["tr", "bl"]  # Top Right or Bottom Left
