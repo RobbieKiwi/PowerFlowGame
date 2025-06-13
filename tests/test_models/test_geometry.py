@@ -61,6 +61,11 @@ class TestGeometry(TestCase):
             self.assertAlmostEqual(p.x, expected_x_val)
             self.assertAlmostEqual(p.y, expected_y_val)
 
+        closed_circle_points = make_circle(center=point_a, radius=1.0, num_points=4, closed=True)
+        first, last = closed_circle_points[0], closed_circle_points[-1]
+        self.assertAlmostEqual(first.x, last.x)
+        self.assertAlmostEqual(first.y, last.y)
+
     def test_str(self) -> None:
         point = Point(x=3.14159, y=2.71828)
         self.assertEqual(str(point), "<Point (3.14,2.72)>")

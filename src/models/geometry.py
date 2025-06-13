@@ -50,6 +50,11 @@ def point_linspace(start: Point, end: Point, num: int) -> list[Point]:
     return [Point(x=float(x), y=float(y)) for x, y in zip(x_values, y_values)]
 
 
-def make_circle(center: Point, radius: float, num_points: int = 100) -> list[Point]:
-    angles = np.linspace(0, 2 * np.pi, num_points + 1)[:-1]  # Exclude the last point to avoid duplication
+def make_circle(center: Point, radius: float, num_points: int = 100, closed: bool = False) -> list[Point]:
+    # If closed is true, the first and last points will be the same, creating a closed circle.
+    if not closed:
+        return make_circle(center=center, radius=radius, num_points=num_points + 1, closed=True)[:-1]
+
+    assert num_points >= 4, "At least 4 points are required to create a closed circle."
+    angles = np.linspace(0, 2 * np.pi, num_points)
     return [center + Point(x=float(radius * np.cos(angle)), y=float(radius * np.sin(angle))) for angle in angles]
