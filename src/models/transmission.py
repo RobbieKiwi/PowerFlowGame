@@ -17,6 +17,7 @@ class TransmissionInfo(LightDc):
     operating_cost: float = 0.0
     is_for_sale: bool = False
     purchase_cost: float = 0.0  # 0 = Not for sale
+    is_active: bool = True
 
     def __post_init__(self) -> None:
         assert self.bus2 > self.bus1, f"bus2 must be greater than bus1. Got {self.bus2} and {self.bus1}"

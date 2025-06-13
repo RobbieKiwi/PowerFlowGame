@@ -6,6 +6,7 @@ import numpy as np
 
 from src.models.assets import AssetRepo, AssetInfo, AssetType
 from src.models.buses import Bus, BusRepo
+from src.models.colors import Color
 from src.models.data.ldc_repo import T_LdcRepo
 from src.models.data.light_dc import T_LightDc
 from src.models.ids import PlayerId, AssetId, BusId, TransmissionId
@@ -117,10 +118,15 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
 
     def _make_dc(self) -> Player:
         player_id = next(self.id_counter)
+        hue = np.random.randint(0, 255)
+        saturation = np.random.randint(200, 255)
+        value = 200
+
+        color = Color(x=(hue, saturation, value), color_model="hsv").rgb_hex_str
         return Player(
             id=PlayerId(player_id),
             name=f"Player {player_id}",
-            color=f"#{np.random.randint(0, 0xFFFFFF):06X}",
+            color=color,
             money=float(np.random.rand() * 100),  # Just an example of money
             is_having_turn=False,
         )
@@ -235,6 +241,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             marginal_price=marginal_price,
             bid_price=bid_price,
             is_ice_cream=is_icecream,
+            is_active=np.random.rand() > 0.2,
         )
 
     def _get_repo_type(self) -> type[AssetRepo]:
@@ -288,6 +295,7 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
             operating_cost=float(np.random.rand() * 100),
             is_for_sale=random_choice([True, False]),
             purchase_cost=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
+            is_active=np.random.rand() > 0.2,
         )
 
     def _get_repo_type(self) -> type[TransmissionRepo]:

@@ -67,15 +67,21 @@ class PlotAsset(PlotObject):
         else:
             raise ValueError(f"Unknown asset type: {self.asset.asset_type}")
 
+        if self.asset.is_active:
+            color = self.color
+        else:
+            color = self.deactivate_color(self.color)
+        contrast_color = get_contrasting_color(color)
+
         main = go.Scatter(
             x=x,
             y=y,
             mode="lines+text",
             text=[""] * (len(x) - 1) + [text],
             fill="toself",
-            fillcolor=self.color.hex_str,
+            fillcolor=color.rgb_hex_str,
             line={"width": 0.0},
             hoverinfo="skip",
-            textfont={"size": 10, "color": get_contrasting_color(self.color).hex_str},
+            textfont={"size": 10, "color": contrast_color.rgb_hex_str},
         )
         return main

@@ -24,7 +24,7 @@ class Player(LightDc):
     @cached_property
     def color_obj(self) -> Color:
         # TODO change the main color property to a color object
-        return Color.from_hex(self.color)
+        return Color(x=self.color)
 
 
 class PlayerRepo(LdcRepo[Player]):

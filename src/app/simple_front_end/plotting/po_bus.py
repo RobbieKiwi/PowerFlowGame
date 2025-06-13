@@ -96,7 +96,7 @@ class PlotBus(PlotObject):
             x=[p.x for p in points],
             y=[p.y for p in points],
             fill="toself",
-            fillcolor=self.color.hex_str,
+            fillcolor=self.color.rgb_hex_str,
             line=dict(color="black", width=1),
             mode="lines",
             hoverinfo="skip",

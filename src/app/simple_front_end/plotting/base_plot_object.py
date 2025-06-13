@@ -73,6 +73,11 @@ class PlotObject(ABC):
     def text_locations(self) -> list[Point]:
         return [self.centre]
 
+    @staticmethod
+    def deactivate_color(c: Color) -> Color:
+        h, s, v = c.hsv
+        return Color(x=(h, round(s / 2), round(v / 2)), color_model="hsv")
+
     def render_hover_text(self) -> Scatter:
         hover_template = (
             f"<b>{self.title}</b><br><br>"
@@ -84,7 +89,7 @@ class PlotObject(ABC):
             mode="markers",
             marker={
                 "size": 10,
-                "color": self.color.hex_str,
+                "color": self.color.rgb_hex_str,
                 "symbol": "circle",
                 "line": {"width": 0.0},
                 "opacity": 0.0,  # Make the marker invisible

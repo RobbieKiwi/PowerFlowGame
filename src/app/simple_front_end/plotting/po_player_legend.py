@@ -39,9 +39,9 @@ class PlayerLegend(PlotObject):
             mode="lines+text",
             text=[""] * (len(points) - 1) + [self.player.name],
             fill="toself",
-            fillcolor=self.color.hex_str,
+            fillcolor=self.color.rgb_hex_str,
             line=dict(color="black", width=0),
-            textfont={"size": 10, "color": get_contrasting_color(self.color).hex_str},
+            textfont={"size": 10, "color": get_contrasting_color(self.color).rgb_hex_str},
             hoverinfo="skip",
         )
         return scatter
