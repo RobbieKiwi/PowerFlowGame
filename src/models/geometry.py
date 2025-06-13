@@ -23,7 +23,7 @@ class Point:
         return self.x == other.x and self.y == other.y
 
     def __str__(self) -> str:
-        places = max(0, round(np.ceil(-np.log10(self.length)) + 1))
+        places = max(0, round(np.ceil(-np.log10(self.length)) + 2))
         return f"<Point ({round(self.x, places)},{round(self.y, places)})>"
 
     def __repr__(self) -> str:
