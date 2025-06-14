@@ -3,6 +3,14 @@ from typing import Self
 
 
 @dataclass(frozen=True)
+class MapSize:
+    """A class to hold the map size settings."""
+
+    width: int
+    height: int
+
+
+@dataclass(frozen=True)
 class GameSettings:
     """A class to hold game settings."""
 
@@ -13,6 +21,7 @@ class GameSettings:
     n_init_assets: int = 10
     initial_funds: int = 1000
     max_connections_per_bus: int = 7
+    map_size: MapSize = MapSize(width=30, height=30)
 
     def to_simple_dict(self) -> dict:
         """Convert the game settings to a simple dictionary."""
