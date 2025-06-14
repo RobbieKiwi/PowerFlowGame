@@ -252,13 +252,13 @@ class BaseGameInitializer(ABC):
 
         players = [
             Player(
-                id=player_id,
+                id=PlayerId(i),
                 name=name,
                 color=color,
                 money=self.settings.initial_funds,
                 is_having_turn=False,  # Initial state, no player has a turn yet
             )
-            for player_id, name, color in zip(ids, names, colors)
+            for i, (name, color) in enumerate(zip(names, colors), start=1)
         ]
 
         return PlayerRepo(players)
