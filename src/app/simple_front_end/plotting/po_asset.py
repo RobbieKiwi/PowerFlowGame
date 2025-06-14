@@ -6,9 +6,9 @@ import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
 from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
-from src.app.simple_front_end.plotting.colors import get_contrasting_color
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.models.assets import AssetInfo, AssetType
+from src.models.colors import get_contrasting_color, Color
 from src.models.player import Player
 
 
@@ -33,8 +33,8 @@ class PlotAsset(PlotObject):
         return title
 
     @property
-    def color(self) -> str:
-        return self.owner.color
+    def color(self) -> Color:
+        return self.owner.color_obj
 
     @property
     def data_dict(self) -> dict[str, str]:
@@ -67,15 +67,21 @@ class PlotAsset(PlotObject):
         else:
             raise ValueError(f"Unknown asset type: {self.asset.asset_type}")
 
+        if self.asset.is_active:
+            color = self.color
+        else:
+            color = self.deactivate_color(self.color)
+        contrast_color = get_contrasting_color(color)
+
         main = go.Scatter(
             x=x,
             y=y,
             mode="lines+text",
             text=[""] * (len(x) - 1) + [text],
             fill="toself",
-            fillcolor=self.color,
+            fillcolor=color.rgb_hex_str,
             line={"width": 0.0},
             hoverinfo="skip",
-            textfont={"size": 10, "color": get_contrasting_color(self.color)},
+            textfont={"size": 10, "color": contrast_color.rgb_hex_str},
         )
         return main
