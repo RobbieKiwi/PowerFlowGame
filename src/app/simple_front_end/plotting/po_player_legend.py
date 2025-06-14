@@ -4,8 +4,9 @@ from functools import cached_property
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.models.colors import get_contrasting_color, Color
+from src.models.geometry import Point
 from src.models.player import Player
 
 

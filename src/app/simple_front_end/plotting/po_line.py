@@ -4,9 +4,10 @@ from functools import cached_property
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject, point_linspace
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.models.colors import Color
+from src.models.geometry import Point, point_linspace
 from src.models.player import Player
 from src.models.transmission import TransmissionInfo
 

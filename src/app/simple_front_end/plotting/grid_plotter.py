@@ -1,11 +1,12 @@
 import plotly.graph_objects as go
 
-from src.app.simple_front_end.plotting.base_plot_object import PlotObject, Point
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.app.simple_front_end.plotting.po_asset import PlotAsset
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.app.simple_front_end.plotting.po_line import PlotTxLine
 from src.app.simple_front_end.plotting.po_player_legend import PlayerLegend
 from src.models.game_state import GameState
+from src.models.geometry import Point
 from src.models.ids import BusId
 
 
