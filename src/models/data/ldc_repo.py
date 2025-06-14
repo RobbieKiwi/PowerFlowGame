@@ -12,6 +12,7 @@ from typing import (
 )
 
 import pandas as pd
+import numpy as np
 
 from src.models.data.light_dc import T_LightDc
 from src.tools.serialization import simplify_type
@@ -92,6 +93,19 @@ class LdcRepo(Generic[T_LightDc], ABC):
         if not type(self) == type(other):
             return False
         return self.df.equals(other.df)
+
+    def next_id(self) -> int:
+        # Returns the next available id for a new item
+        if len(self.df) == 0:
+            return 1
+        return max(self.df.index) + 1
+
+    # GET
+    def get_random(self: T) -> T_LightDc:
+        if len(self) == 0:
+            raise ValueError("Cannot get a random item from an empty repo")
+        random_index = np.random.choice(self.df.index)
+        return self[random_index]
 
     # UPDATE
     def add(self: T, x: T | T_LightDc) -> T:
