@@ -15,7 +15,7 @@ from src.models.player import Player, PlayerRepo
 from src.models.transmission import TransmissionRepo, TransmissionInfo, TransmissionId
 
 
-class BusTopology:
+class BusTopologyMaker:
 
     @staticmethod
     def _x_circle(i: int, n: int):
@@ -100,7 +100,7 @@ class BusTopology:
         ]
 
 
-class TransmissionTopology:
+class TransmissionTopologyMaker:
     @staticmethod
     def _get_bus_combinations(n_buses: int) -> List[tuple[BusId, BusId]]:
         """
@@ -127,7 +127,7 @@ class TransmissionTopology:
         :return: List of dictionaries containing bus connections.
         """
         connections = []
-        possible_connections = TransmissionTopology._get_bus_combinations(n_buses)
+        possible_connections = TransmissionTopologyMaker._get_bus_combinations(n_buses)
         for _ in range(n_connections):
             bus1, bus2 = np.random.choice(possible_connections)
             connections.append({'bus1': bus1, 'bus2': bus2})
@@ -298,7 +298,7 @@ class DefaultGameInitializer(BaseGameInitializer):
     """
 
     def create_buses_repo(self) -> BusRepo:
-        topology = BusTopology.make_layered_round(
+        topology = BusTopologyMaker.make_layered_round(
             n_buses=self.settings.n_buses, n_buses_per_layer=self.settings.n_players, radius=10.0
         )
         buses = [
@@ -352,7 +352,7 @@ class DefaultGameInitializer(BaseGameInitializer):
         return AssetRepo(assets)
 
     def create_transmission_repo(self) -> TransmissionRepo:
-        topology = TransmissionTopology.make_spiderweb(
+        topology = TransmissionTopologyMaker.make_spiderweb(
             n_buses=self.settings.n_buses, n_buses_per_layer=self.settings.n_players
         )
         lines = [
