@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import plotly.graph_objs as go
 from plotly.graph_objs import Scatter
 
+from src.models.colors import Color
 from src.models.geometry import Point
 
 
@@ -20,7 +21,7 @@ class PlotObject(ABC):
 
     @property
     @abstractmethod
-    def color(self) -> str:
+    def color(self) -> Color:
         pass
 
     @property
@@ -37,6 +38,11 @@ class PlotObject(ABC):
     def text_locations(self) -> list[Point]:
         return [self.centre]
 
+    @staticmethod
+    def deactivate_color(c: Color) -> Color:
+        h, s, v = c.hsv
+        return Color(x=(h, round(s / 2), round(v / 2)), color_model="hsv")
+
     def render_hover_text(self) -> Scatter:
         hover_template = (
             f"<b>{self.title}</b><br><br>"
@@ -48,7 +54,7 @@ class PlotObject(ABC):
             mode="markers",
             marker={
                 "size": 10,
-                "color": self.color,
+                "color": self.color.rgb_hex_str,
                 "symbol": "circle",
                 "line": {"width": 0.0},
                 "opacity": 0.0,  # Make the marker invisible

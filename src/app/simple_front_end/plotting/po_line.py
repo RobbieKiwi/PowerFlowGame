@@ -6,6 +6,7 @@ from plotly.graph_objs import Scatter
 
 from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.app.simple_front_end.plotting.po_bus import PlotBus
+from src.models.colors import Color
 from src.models.geometry import Point, point_linspace
 from src.models.player import Player
 from src.models.transmission import TransmissionInfo
@@ -22,8 +23,8 @@ class PlotTxLine(PlotObject):
         return f"Line{self.line.id}"
 
     @property
-    def color(self) -> str:
-        return self.owner.color
+    def color(self) -> Color:
+        return self.owner.color_obj
 
     @property
     def data_dict(self) -> dict[str, str]:
@@ -70,10 +71,16 @@ class PlotTxLine(PlotObject):
 
     def render_shape(self) -> Scatter:
         points = self.vertices
+
+        if self.line.is_active:
+            color = self.color
+        else:
+            color = self.deactivate_color(self.color)
+
         scatter = go.Scatter(
             x=[p.x for p in points],
             y=[p.y for p in points],
-            line=dict(color=self.owner.color, width=3),
+            line=dict(color=color.rgb_hex_str, width=3),
             opacity=0.8,
             mode="lines",
             hoverinfo="skip",
