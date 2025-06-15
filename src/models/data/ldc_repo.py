@@ -101,7 +101,7 @@ class LdcRepo(Generic[T_LightDc], ABC):
         return max(self.df.index) + 1
 
     # GET
-    def get_random(self: T) -> T_LightDc:
+    def get_random(self) -> T_LightDc:
         if len(self) == 0:
             raise ValueError("Cannot get a random item from an empty repo")
         random_index = np.random.choice(self.df.index)
