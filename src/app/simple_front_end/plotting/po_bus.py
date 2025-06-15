@@ -6,8 +6,10 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.models.buses import Bus
+from src.models.colors import Color
+from src.models.geometry import Point
 from src.models.player import Player
 
 SocketSide = Literal["tr", "bl"]  # Top Right or Bottom Left
@@ -80,8 +82,8 @@ class PlotBus(PlotObject):
         return f"Bus{self.bus.id}"
 
     @property
-    def color(self) -> str:
-        return self.owner.color
+    def color(self) -> Color:
+        return self.owner.color_obj
 
     @property
     def data_dict(self) -> dict[str, str]:
@@ -95,7 +97,7 @@ class PlotBus(PlotObject):
             x=[p.x for p in points],
             y=[p.y for p in points],
             fill="toself",
-            fillcolor=self.owner.color,
+            fillcolor=self.color.rgb_hex_str,
             line=dict(color="black", width=1),
             mode="lines",
             hoverinfo="skip",

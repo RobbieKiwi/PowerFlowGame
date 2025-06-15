@@ -1,14 +1,12 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Literal, Optional
 
-import numpy as np
 import plotly.graph_objects as go
 from plotly.graph_objs import Scatter
 
-from src.app.simple_front_end.plotting.base_plot_object import Point, PlotObject
-from src.app.simple_front_end.plotting.colors import get_contrasting_color
-from src.models.buses import Bus
+from src.app.simple_front_end.plotting.base_plot_object import PlotObject
+from src.models.colors import get_contrasting_color, Color
+from src.models.geometry import Point
 from src.models.player import Player
 
 
@@ -24,8 +22,8 @@ class PlayerLegend(PlotObject):
         return self.player.name
 
     @property
-    def color(self) -> str:
-        return self.player.color
+    def color(self) -> Color:
+        return self.player.color_obj
 
     @property
     def data_dict(self) -> dict[str, str]:
@@ -42,9 +40,9 @@ class PlayerLegend(PlotObject):
             mode="lines+text",
             text=[""] * (len(points) - 1) + [self.player.name],
             fill="toself",
-            fillcolor=self.color,
+            fillcolor=self.color.rgb_hex_str,
             line=dict(color="black", width=0),
-            textfont={"size": 10, "color": get_contrasting_color(self.color)},
+            textfont={"size": 10, "color": get_contrasting_color(self.color).rgb_hex_str},
             hoverinfo="skip",
         )
         return scatter
