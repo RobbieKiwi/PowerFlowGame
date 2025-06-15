@@ -5,7 +5,6 @@ import math
 import numpy as np
 
 from matplotlib import cm
-from pandas.core.methods.describe import select_describe_func
 
 from src.models.assets import AssetRepo, AssetInfo, AssetId, AssetType
 from src.models.buses import BusRepo, Bus
@@ -14,104 +13,45 @@ from src.models.game_state import GameState, Phase
 from src.models.ids import GameId, PlayerId, BusId
 from src.models.player import Player, PlayerRepo
 from src.models.transmission import TransmissionRepo, TransmissionInfo, TransmissionId
+from src.models.geometry import Point, Geometry
 
 
 class BusTopologyMaker:
-    # TODO: to be updated once the geometrical tools are available
 
     @staticmethod
-    def _x_circle(i: int, n: int) -> float:
-        """
-        Calculate the x-coordinate of a point on a circle.
-        :param i: Index of the point.
-        :param n: Total number of points.
-        :return: x-coordinate of the point.
-        """
-        return math.cos(2 * math.pi * i / n).real
-
-    @staticmethod
-    def _y_circle(i: int, n: int) -> float:
-        """
-        Calculate the y-coordinate of a point on a circle.
-        :param i: Index of the point.
-        :param n: Total number of points.
-        :return: y-coordinate of the point.
-        """
-        return math.sin(2 * math.pi * i / n).real
-
-    @staticmethod
-    def make_line(n_buses: int, length: int) -> List[Dict[str, float]]:
-        """
-        Create a linear bus topology with the specified number of buses.
-        :param n_buses: Number of buses to create.
-        :param length: Length of the line on which the buses are placed.
-        :return: List of dictionaries containing x and y coordinates for each bus.
-        """
-        return [{'x': float(i) * length / n_buses, 'y': 0.0} for i in range(1, n_buses + 1)]
+    def make_line(n_buses: int, length: int) -> List[Point]:
+        line_layout = Geometry.make_line(start=Point(x=0.0, y=0.0), end=Point(x=length, y=0.0), n_points=n_buses)
+        return line_layout.points
 
     @staticmethod
     def make_grid(n_buses: int, n_buses_per_row: int) -> List[Dict[str, float]]:
-        """
-        Create a grid bus topology with the specified number of buses.
-        :param n_buses: Number of buses to create.
-        :param n_buses_per_row: Number of buses per row in the grid.
-        :return: List of dictionaries containing x and y coordinates for each bus.
-        """
         return [{'x': float(i % n_buses_per_row), 'y': float(i // n_buses_per_row)} for i in range(1, n_buses + 1)]
 
     @staticmethod
-    def make_random(n_buses: int, x_range: float = 10.0, y_range: float = 10.0) -> List[Dict[str, float]]:
-        """
-        Create a random bus topology with the specified number of buses.
-        :param n_buses: Number of buses to create.
-        :param x_range: Range for x coordinates.
-        :param y_range: Range for y coordinates.
-        :return: List of dictionaries containing x and y coordinates for each bus.
-        """
+    def make_random(n_buses: int, x_range: float = 10.0, y_range: float = 10.0) -> List[Point]:
         n_bins = n_buses
-        position_bins = np.linspace(0, 1, n_bins)
-        grid_x, grid_y = np.meshgrid(position_bins, position_bins, indexing='ij')
-        position_grid = np.column_stack([grid_x.ravel(), grid_y.ravel()])
-        possible_indices = list(range(n_bins ** 2))
-        selection = np.random.choice(possible_indices, n_buses, replace=False)
-        return [
-            {
-                'x': float(position_grid[idx, 0]) * x_range,
-                'y': float(position_grid[idx, 1]) * y_range
-            }
-            for idx in selection
-        ]
+        grid_layout = Geometry.make_grid(
+            start_corner=Point(x=0.0, y=0.0), width=x_range, height=y_range, n_points_per_direction=n_bins
+        )
+        selection = np.random.choice(grid_layout.points, n_buses, replace=False)
+        return selection
 
     @classmethod
-    def make_round(cls, n_buses: int, radius: float = 10.0) -> List[Dict[str, float]]:
-        """
-        Create a round bus topology with the specified number of buses.
-        :param n_buses: Number of buses to create.
-        :param radius: Radius of the circle on which the buses are placed.
-        :return: List of dictionaries containing x and y coordinates for each bus.
-        """
-        return [
-            {'x': radius * cls._x_circle(i, n_buses), 'y': radius * cls._y_circle(i, n_buses)}
-            for i in range(1, n_buses + 1)
-        ]
+    def make_regular_polygon(cls, n_buses: int, radius: float = 10.0) -> List[Point]:
+        circle_layout = Geometry.make_regular_polygon(
+            center=Point(x=0.0, y=0.0), radius=radius, n_points=n_buses, closed=False
+        )
+        return circle_layout.points
 
     @classmethod
-    def make_layered_round(cls, n_buses: int, n_buses_per_layer: int, radius: float = 10.0) -> List[Dict[str, float]]:
-        """
-        Create a topology of concentric bus rings with the specified number of buses.
-        :param n_buses: Number of buses to create.
-        :param n_buses_per_layer: Number of buses per layer.
-        :param radius: Radius of the circle on which the outer layer of buses is placed.
-        :return: List of dictionaries containing x and y coordinates for each bus.
-        """
+    def make_layered_polygon(cls, n_buses: int, n_buses_per_layer: int, radius: float = 10.0) -> List[Point]:
         n_layers = math.ceil(n_buses / n_buses_per_layer)
-        return [
-            {
-                'x': radius * math.ceil(i / n_buses_per_layer) / n_layers * cls._x_circle(i, n_buses),
-                'y': radius * math.ceil(i / n_buses_per_layer) / n_layers * cls._y_circle(i, n_buses),
-            }
-            for i in range(1, n_buses + 1)
-        ]
+        layered_polygon_layout = Geometry.make_empty()
+        for i in range(n_layers):
+            layered_polygon_layout += Geometry.make_regular_polygon(
+                center=Point(x=0.0, y=0.0), radius=radius * (i + 1) / n_layers, n_points=n_buses_per_layer, closed=False
+            )
+        return layered_polygon_layout.points[:n_buses]
 
 
 class TransmissionTopologyMaker:
@@ -358,16 +298,16 @@ class DefaultGameInitializer(BaseGameInitializer):
     """
 
     def _create_bus_repo(self, player_repo: PlayerRepo) -> BusRepo:
-        topology = BusTopologyMaker.make_layered_round(
+        topology = BusTopologyMaker.make_layered_polygon(
             n_buses=self.settings.n_buses,
             n_buses_per_layer=self.settings.n_players,
             radius=self.settings.map_size.height * 0.9 / 2,
         )
         buses = [
             (
-                Bus(id=BusId(i + 1), player_id=player_repo.player_ids[i], **topology[i])
+                Bus(id=BusId(i + 1), player_id=player_repo.player_ids[i], **topology[i].to_dict())
                 if i < self.settings.n_players
-                else Bus(id=BusId(i + 1), **topology[i])
+                else Bus(id=BusId(i + 1), **topology[i].to_dict())
             )  # Neutral bus not owned by any player
             for i in range(self.settings.n_buses)
         ]

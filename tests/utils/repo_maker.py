@@ -68,7 +68,6 @@ class BusRepoMaker(RepoMaker[BusRepo, Bus]):
         return self
 
     def _make_dc(self, player_id: PlayerId = PlayerId.get_npc()) -> Bus:
-        # TODO Add playable map area to state, move point model from front end to core models
 
         map_width: float = 20.0
         half_width = map_width / 2
