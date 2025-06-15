@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.models.geometry import Point, point_linspace, make_circle
+from src.models.geometry import Point, Geometry
 
 
 class TestGeometry(TestCase):
@@ -39,30 +39,30 @@ class TestGeometry(TestCase):
     def test_linspace(self) -> None:
         point_a = Point(x=1.0, y=2.0)
         point_b = Point(x=1.0, y=6.0)
-        points = point_linspace(start=point_a, end=point_b, num=3)
+        line = Geometry.make_line(start=point_a, end=point_b, n_points=3)
 
-        self.assertEqual(len(points), 3)
+        self.assertEqual(len(line.points), 3)
         expected_x = [1, 1, 1]
         expected_y = [2, 4, 6]
-        for x, y, point in zip(expected_x, expected_y, points):
+        for x, y, point in zip(expected_x, expected_y, line.points):
             self.assertAlmostEqual(point.x, x)
             self.assertAlmostEqual(point.y, y)
 
     def test_circle(self) -> None:
         point_a = Point(x=1.0, y=2.0)
-        circle_points = make_circle(center=point_a, radius=1.0, num_points=4)
+        circle = Geometry.make_regular_polygon(center=point_a, radius=1.0, n_points=4)
 
-        for p in circle_points:
+        for p in circle.points:
             self.assertAlmostEqual((p - point_a).length, 1.0)
 
         expected_x = [2.0, 1.0, 0.0, 1.0]
         expected_y = [2.0, 3.0, 2.0, 1.0]
-        for expected_x_val, expected_y_val, p in zip(expected_x, expected_y, circle_points):
+        for expected_x_val, expected_y_val, p in zip(expected_x, expected_y, circle.points):
             self.assertAlmostEqual(p.x, expected_x_val)
             self.assertAlmostEqual(p.y, expected_y_val)
 
-        closed_circle_points = make_circle(center=point_a, radius=1.0, num_points=4, closed=True)
-        first, last = closed_circle_points[0], closed_circle_points[-1]
+        closed_circle = Geometry.make_regular_polygon(center=point_a, radius=1.0, n_points=4, closed=True)
+        first, last = closed_circle.points[0], closed_circle.points[-1]
         self.assertAlmostEqual(first.x, last.x)
         self.assertAlmostEqual(first.y, last.y)
 
