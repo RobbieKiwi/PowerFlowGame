@@ -19,6 +19,8 @@ class GameSettings:
     max_rounds: int = 20
     n_init_ice_cream: int = 5
     n_init_assets: int = 10
+    min_bid_price: float = -100
+    max_bid_price: float = 100
     initial_funds: int = 1000
     max_connections_per_bus: int = 7
     map_size: MapSize = MapSize(width=30, height=30)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Self, Optional
+from typing import Self, Optional, Counter
 
 from src.models.assets import AssetRepo
 from src.models.buses import BusRepo
@@ -33,6 +33,7 @@ class Phase(IntEnum):
 class GameState:
     # A complete description of the current state of the game.
     game_id: GameId
+    # round_counter: int    # TODO: Implement round counter if needed
     game_settings: GameSettings
     phase: Phase
     players: PlayerRepo

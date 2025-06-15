@@ -65,10 +65,52 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        # TODO Check if the bid is valid (including if the player can afford it).
-        # TODO Update bids in the game state
-        # TODO Return one UpdateBidResponse for the player who made the bid
-        raise NotImplementedError()
+
+        def make_failed_response(failed_message: str) -> tuple[GameState, list[UpdateBidResponse]]:
+            failed_response = UpdateBidResponse(
+                player_id=msg.player_id,
+                game_state=game_state,
+                success=False,
+                message=failed_message,
+                asset_id=msg.asset_id,
+            )
+            return game_state, [failed_response]
+
+        if msg.asset_id not in game_state.assets.asset_ids:
+            return make_failed_response("Asset does not exist.")
+
+        player = game_state.players[msg.player_id]
+        asset = game_state.assets[msg.asset_id]
+        sign_cashflow = game_state.assets.get_cashflow_sign(msg.asset_id)
+        min_bid = game_state.game_settings.min_bid_price
+        max_bid = game_state.game_settings.max_bid_price
+
+        if player.id != asset.owner_player:
+            return make_failed_response(f"Player {player.id} cannot bid on asset {asset.id} as they do not own it.")
+
+        if min_bid > msg.bid_price or msg.bid_price > max_bid:
+            return make_failed_response(
+                f"Bid price {msg.bid_price} is not within the allowed range "
+                f"[{min_bid}, {max_bid}]."
+            )
+
+        if msg.bid_price * sign_cashflow * asset.power_expected - player.money < 0:  # todo: clarify what power expected and power std mean, and correct this condition if necessary
+            return make_failed_response(
+                f"Player {player.id} cannot afford the bid price of {msg.bid_price} for asset {asset.id}."
+            )
+
+        new_asset = game_state.assets.update_bid_price(asset_id=msg.asset_id, bid_price=msg.bid_price)
+        new_game_state = replace(game_state, assets=new_asset)
+
+        response = UpdateBidResponse(
+            player_id=player.id,
+            game_state=new_game_state,
+            success=True,
+            message=f"Player {player.id} successfully updated bid for asset {asset.id} to {msg.bid_price}.",
+            asset_id=msg.asset_id,
+        )
+
+        return new_game_state, [response]
 
     @classmethod
     def handle_buy_asset_message(
