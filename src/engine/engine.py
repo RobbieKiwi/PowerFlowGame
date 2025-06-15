@@ -127,8 +127,12 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        # TODO Update the player to indicate that their turn has ended
+        new_players = game_state.players.end_turn(player_id=msg.player_id)
         # TODO If this phase requires players to play one by one (Do we need such a phase?) Then cycle to the next player
-        # TODO Check if all players have ended their turns and we need to move on to the next phase
-        # TODO If necessary, return an message to signal yourself to go to a different phase
-        raise NotImplementedError()
+        if game_state.players.are_all_players_finished():
+            new_game_state = replace(game_state, players=new_players, phase=game_state.phase.get_next())
+            return new_game_state, [NewPhase(phase=new_game_state.phase)]
+        else:
+            new_game_state = replace(game_state, players=new_players)
+            return new_game_state, []
+

@@ -24,6 +24,10 @@ class Phase(IntEnum):
     SNEAKY_TRICKS = 1
     DA_AUCTION = 2
 
+    def get_next(self) -> Self:
+        next_index = (self.value + 1) % len(Phase)
+        return Phase(next_index)
+
 
 @dataclass
 class GameState:
