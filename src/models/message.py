@@ -50,7 +50,7 @@ FromGameMessage = Union[InternalMessage, GameToPlayerMessage]
 
 
 @dataclass(frozen=True)
-class NewPhase(InternalMessage):
+class ConcludePhase(InternalMessage):
     phase: Phase
 
 

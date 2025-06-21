@@ -252,6 +252,7 @@ class BaseGameInitializer(ABC):
                         bus1=id_bus1,
                         bus2=id_bus2,
                         reactance=np.random.uniform(0.1, 1.0),  # Random reactance for each transmission
+                        capacity= np.random.uniform(10, 100),  # Random capacity for each transmission
                         health=5,
                         operating_cost=np.random.uniform(0.01, 0.1),
                         is_for_sale=True,
@@ -364,6 +365,7 @@ class DefaultGameInitializer(BaseGameInitializer):
                 bus1=bus_pair["bus1"],
                 bus2=bus_pair["bus2"],
                 reactance=np.random.uniform(0.1, 1.0),  # Random reactance for each transmission
+                capacity=np.random.uniform(10, 100),  # Random capacity for each transmission
                 health=5,
                 operating_cost=np.random.uniform(0.01, 0.1),
                 is_for_sale=True,

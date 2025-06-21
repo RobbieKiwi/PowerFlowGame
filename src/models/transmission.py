@@ -13,6 +13,7 @@ class TransmissionInfo(LightDc):
     bus1: BusId
     bus2: BusId
     reactance: float = 0.0
+    capacity: float = 100.0
     health: int = 5
     operating_cost: float = 0.0
     is_for_sale: bool = False

@@ -1,15 +1,17 @@
 from dataclasses import replace
 
-from src.models.game_state import GameState
+from src.engine.market_coupling import MarketCouplingCalculator
+from src.models.game_state import GameState, Phase
 from src.models.message import (
     UpdateBidRequest,
     BuyAssetRequest,
     EndTurn,
     UpdateBidResponse,
     BuyAssetResponse,
-    NewPhase,
+    ConcludePhase,
     ToGameMessage,
     FromGameMessage,
+    GameUpdate,
 )
 
 
@@ -26,7 +28,7 @@ class Engine:
         :return: The new game state and a list of messages to be sent
         """
         # Handle the message based on its type
-        if isinstance(msg, NewPhase):
+        if isinstance(msg, ConcludePhase):
             return cls.handle_new_phase_message(game_state, msg)
         elif isinstance(msg, UpdateBidRequest):
             return cls.handle_update_bid_message(game_state, msg)
@@ -41,17 +43,31 @@ class Engine:
     def handle_new_phase_message(
         cls,
         game_state: GameState,
-        msg: NewPhase,
-    ) -> tuple[GameState, list[FromGameMessage]]:
+        msg: ConcludePhase,
+    ) -> tuple[GameState, list[GameUpdate]]:
         """
         Handle a new phase message.
         :param game_state: The current state of the game
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        # TODO Do something depending on what phase we are in
-        # TODO if we are in the da_auction phase, we need to run the market coupling algorithm
-        raise NotImplementedError()
+        if msg.phase == Phase.CONSTRUCTION:
+            new_game_state = replace(game_state, phase=msg.phase.get_next())
+            return new_game_state, [GameUpdate(player_id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.") for player_id in game_state.players.player_ids]
+        elif msg.phase == Phase.DA_AUCTION:
+            market_result = MarketCouplingCalculator.run(game_state)
+            gs_updated_player_money = MarketCouplingCalculator.adjust_players_money(game_state, market_result)
+            new_game_state = replace(gs_updated_player_money, market_coupling_result=market_result, phase=msg.phase.get_next())
+            return new_game_state, [
+                GameUpdate(player_id, game_state=new_game_state, message=f"Day-ahead market has been cleared. Your balance was adjusted accordingly from ${game_state.players[player_id].money} to ${new_game_state.players[player_id].money}. Phase changed to {new_game_state.phase}.")
+                for player_id in new_game_state.players.player_ids
+            ]
+        elif msg.phase == Phase.SNEAKY_TRICKS:
+            new_game_state = replace(game_state, phase=msg.phase.get_next())
+            return new_game_state, [GameUpdate(id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.") for id in game_state.players.player_ids]
+        # TODO in the new phase, one or all players have turns, so we need to update the game state accordingly
+        else:
+            raise NotImplementedError(f"Phase {msg.phase} not implemented.")
 
     @classmethod
     def handle_update_bid_message(
@@ -162,7 +178,7 @@ class Engine:
         cls,
         game_state: GameState,
         msg: EndTurn,
-    ) -> tuple[GameState, list[NewPhase]]:
+    ) -> tuple[GameState, list[ConcludePhase]]:
         """
         Handle an end turn message.
         :param game_state: The current state of the game
@@ -172,8 +188,8 @@ class Engine:
         new_players = game_state.players.end_turn(player_id=msg.player_id)
         # TODO If this phase requires players to play one by one (Do we need such a phase?) Then cycle to the next player
         if game_state.players.are_all_players_finished():
-            new_game_state = replace(game_state, players=new_players, phase=game_state.phase.get_next())
-            return new_game_state, [NewPhase(phase=new_game_state.phase)]
+            new_game_state = replace(game_state, players=new_players)
+            return new_game_state, [ConcludePhase(phase=game_state.phase)]
         else:
             new_game_state = replace(game_state, players=new_players)
             return new_game_state, []

@@ -290,6 +290,7 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
             bus1=bus1,
             bus2=bus2,
             reactance=float(np.random.rand() * 10 + 1),
+            capacity=float(np.random.rand() * 100 + 50),
             health=int(np.random.randint(1, 6)),
             operating_cost=float(np.random.rand() * 100),
             is_for_sale=random_choice([True, False]),
