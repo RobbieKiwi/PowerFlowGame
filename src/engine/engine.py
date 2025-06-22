@@ -104,7 +104,7 @@ class Engine:
         if player.id != asset.owner_player:
             return make_failed_response(f"Player {player.id} cannot bid on asset {asset.id} as they do not own it.")
 
-        if min_bid > msg.bid_price or msg.bid_price > max_bid:
+        if not (min_bid <= msg.bid_price <= max_bid):
             return make_failed_response(
                 f"Bid price {msg.bid_price} is not within the allowed range "
                 f"[{min_bid}, {max_bid}]."
