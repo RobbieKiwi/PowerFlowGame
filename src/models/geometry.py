@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Self, List
+from typing import Self
 from enum import Enum
 
 import numpy as np
@@ -60,14 +60,14 @@ class Geometry:
         CIRCLE = "circle"
         COMPOSITE = "composite"
 
-    def __init__(self, points: List[Point], shape_type: ShapeType):
+    def __init__(self, points: list[Point], shape_type: ShapeType):
         self.shape_type = shape_type
         self.points = points
 
-    def __add__(self, other: Self | Point | List[Point]) -> Self:
+    def __add__(self, other: Self | Point | list[Point]) -> Self:
         if isinstance(other, Point):
             return Geometry(points=self.points + [other], shape_type=self.ShapeType.COMPOSITE)
-        if isinstance(other, List):
+        if isinstance(other, list):
             return Geometry(points=self.points + other, shape_type=self.ShapeType.COMPOSITE)
         if isinstance(other, Geometry):
             return Geometry(points=self.points + other.points, shape_type=self.ShapeType.COMPOSITE)

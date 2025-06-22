@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Self, Callable, List
+from typing import Self, Callable
 
 from src.models.colors import Color
 from src.models.data.ldc_repo import LdcRepo
@@ -70,11 +70,11 @@ class PlayerRepo(LdcRepo[Player]):
         df.loc[player_id, "is_having_turn"] = is_having_turn
         return self.update_frame(df)
 
-    def end_turn(self, player_id: PlayerId | List[PlayerId]) -> Self:
+    def end_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
         # End players' turn
         return self._set_turn(player_id, False)
 
-    def start_turn(self, player_id: PlayerId | List[PlayerId]) -> Self:
+    def start_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
         # Start a players' turn
         return self._set_turn(player_id, True)
 

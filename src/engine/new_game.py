@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import List, Dict, Optional
+from typing import Optional
 from abc import ABC, abstractmethod
 import math
 import numpy as np
@@ -19,16 +19,16 @@ from src.models.geometry import Point, Geometry
 class BusTopologyMaker:
 
     @staticmethod
-    def make_line(n_buses: int, length: int) -> List[Point]:
+    def make_line(n_buses: int, length: int) -> list[Point]:
         line_layout = Geometry.make_line(start=Point(x=0.0, y=0.0), end=Point(x=length, y=0.0), n_points=n_buses)
         return line_layout.points
 
     @staticmethod
-    def make_grid(n_buses: int, n_buses_per_row: int) -> List[Dict[str, float]]:
+    def make_grid(n_buses: int, n_buses_per_row: int) -> list[dict[str, float]]:
         return [{'x': float(i % n_buses_per_row), 'y': float(i // n_buses_per_row)} for i in range(1, n_buses + 1)]
 
     @staticmethod
-    def make_random(n_buses: int, x_range: float = 10.0, y_range: float = 10.0) -> List[Point]:
+    def make_random(n_buses: int, x_range: float = 10.0, y_range: float = 10.0) -> list[Point]:
         n_bins = n_buses
         grid_layout = Geometry.make_grid(
             start_corner=Point(x=0.0, y=0.0), width=x_range, height=y_range, n_points_per_direction=n_bins
@@ -37,14 +37,14 @@ class BusTopologyMaker:
         return selection
 
     @classmethod
-    def make_regular_polygon(cls, n_buses: int, radius: float = 10.0) -> List[Point]:
+    def make_regular_polygon(cls, n_buses: int, radius: float = 10.0) -> list[Point]:
         circle_layout = Geometry.make_regular_polygon(
             center=Point(x=0.0, y=0.0), radius=radius, n_points=n_buses, closed=False
         )
         return circle_layout.points
 
     @classmethod
-    def make_layered_polygon(cls, n_buses: int, n_buses_per_layer: int, radius: float = 10.0) -> List[Point]:
+    def make_layered_polygon(cls, n_buses: int, n_buses_per_layer: int, radius: float = 10.0) -> list[Point]:
         n_layers = math.ceil(n_buses / n_buses_per_layer)
         layered_polygon_layout = Geometry.make_empty()
         for i in range(n_layers):
@@ -56,7 +56,7 @@ class BusTopologyMaker:
 
 class TransmissionTopologyMaker:
     @staticmethod
-    def _get_bus_combinations(bus_repo: BusRepo) -> List[tuple[BusId, BusId]]:
+    def _get_bus_combinations(bus_repo: BusRepo) -> list[tuple[BusId, BusId]]:
         """
         Generate all unique combinations of bus pairs for transmission lines.
         :param bus_repo: BusRepo containing the buses in the game.
@@ -65,7 +65,7 @@ class TransmissionTopologyMaker:
         return sorted(combinations(bus_repo.bus_ids, 2))
 
     @staticmethod
-    def make_sequential(bus_repo: BusRepo) -> List[Dict[str, BusId]]:
+    def make_sequential(bus_repo: BusRepo) -> list[dict[str, BusId]]:
         """
         Create a linear transmission topology with the specified number of buses.
         :param bus_repo: BusRepo containing the buses in the game.
@@ -74,7 +74,7 @@ class TransmissionTopologyMaker:
         return [{'bus1': bus_repo.bus_ids[i], 'bus2': bus_repo.bus_ids[i + 1]} for i in range(len(bus_repo))]
 
     @staticmethod
-    def make_random(bus_repo: BusRepo, n_connections: int) -> List[Dict[str, BusId]]:
+    def make_random(bus_repo: BusRepo, n_connections: int) -> list[dict[str, BusId]]:
         """
         Create a random transmission topology with the specified number of buses and connections.
         :param bus_repo: BusRepo containing the buses in the game.
@@ -89,7 +89,7 @@ class TransmissionTopologyMaker:
         return connections
 
     @staticmethod
-    def make_grid(bus_repo: BusRepo, n_buses_per_row: int) -> List[Dict[str, BusId]]:
+    def make_grid(bus_repo: BusRepo, n_buses_per_row: int) -> list[dict[str, BusId]]:
         """
         Create a grid transmission topology with the specified number of buses.
         :param bus_repo: BusRepo containing the buses in the game.
@@ -106,7 +106,7 @@ class TransmissionTopologyMaker:
         return connections
 
     @staticmethod
-    def make_spiderweb(bus_repo: BusRepo, n_buses_per_layer: int) -> List[Dict[str, BusId]]:
+    def make_spiderweb(bus_repo: BusRepo, n_buses_per_layer: int) -> list[dict[str, BusId]]:
         """
         Create a spiderweb-like transmission topology.
         :param bus_repo: BusRepo containing the buses in the game.
@@ -135,7 +135,7 @@ class TransmissionTopologyMaker:
 
         return connections
 
-    def make_connect_n_closest(self, bus_repo: BusRepo, n_connections: int) -> List[Dict[str, BusId]]:
+    def make_connect_n_closest(self, bus_repo: BusRepo, n_connections: int) -> list[dict[str, BusId]]:
         """
         Create a transmission topology that connects each bus to its n closest buses.
         :param bus_repo: BusRepo containing the buses to connect.
@@ -208,7 +208,7 @@ class BaseGameInitializer(ABC):
         )
         return new_game
 
-    def _create_player_repo(self, names: List[str], colors: List[str]) -> PlayerRepo:
+    def _create_player_repo(self, names: list[str], colors: list[str]) -> PlayerRepo:
         """
         Create a PlayerRepo with the given player names and colors.
         :param names: List of player names.
