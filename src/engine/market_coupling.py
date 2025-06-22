@@ -85,11 +85,10 @@ class MarketCouplingCalculator:
         for player in game_state.players:
             operating_cost = 0.0
             market_cashflow = 0.0
-            for asset in game_state.assets.get_all_for_player(player.id):
-                if asset.is_active:
-                    dispatched_volume = market_coupling_result.assets_dispatch[cls.get_pypsa_name(asset.id)]
-                    operating_cost += abs(dispatched_volume) * asset.operating_cost
-                    market_cashflow += dispatched_volume * asset.marginal_price
+            for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
+                dispatched_volume = market_coupling_result.assets_dispatch[cls.get_pypsa_name(asset.id)]
+                operating_cost += abs(dispatched_volume) * asset.operating_cost
+                market_cashflow += dispatched_volume * asset.marginal_price
             new_game_state = replace(new_game_state, players=game_state.players.add_money(player.id, market_cashflow - operating_cost))
         return new_game_state
 
