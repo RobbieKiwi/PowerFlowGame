@@ -1,6 +1,7 @@
 from dataclasses import replace
 
 from src.engine.market_coupling import MarketCouplingCalculator
+from src.models.market_coupling_result import MarketCouplingResult
 from src.models.game_state import GameState, Phase
 from src.models.message import (
     UpdateBidRequest,
@@ -39,6 +40,24 @@ class Engine:
         else:
             raise NotImplementedError(f"message type {type(msg)} not implemented.")
 
+    @staticmethod
+    def adjust_players_aftermarket_money(
+        game_state: GameState,
+        market_coupling_result: MarketCouplingResult,
+    ) -> GameState:
+        new_game_state = replace(game_state)
+        for player in game_state.players:
+            operating_cost = 0.0
+            market_cashflow = 0.0
+            for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
+                dispatched_volume = market_coupling_result.assets_dispatch[MarketCouplingCalculator.get_pypsa_name(asset.id)]
+                operating_cost += abs(dispatched_volume) * asset.operating_cost
+                market_cashflow += dispatched_volume * asset.marginal_price
+            new_game_state = replace(
+                new_game_state, players=game_state.players.add_money(player.id, market_cashflow - operating_cost)
+            )
+        return new_game_state
+
     @classmethod
     def handle_new_phase_message(
         cls,
@@ -56,7 +75,7 @@ class Engine:
             return new_game_state, [GameUpdate(player_id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.") for player_id in game_state.players.player_ids]
         elif msg.phase == Phase.DA_AUCTION:
             market_result = MarketCouplingCalculator.run(game_state)
-            gs_updated_player_money = MarketCouplingCalculator.adjust_players_money(game_state, market_result)
+            gs_updated_player_money = cls.adjust_players_aftermarket_money(game_state, market_result)
             new_game_state = replace(gs_updated_player_money, market_coupling_result=market_result, phase=msg.phase.get_next())
             return new_game_state, [
                 GameUpdate(player_id, game_state=new_game_state, message=f"Day-ahead market has been cleared. Your balance was adjusted accordingly from ${game_state.players[player_id].money} to ${new_game_state.players[player_id].money}. Phase changed to {new_game_state.phase}.")
@@ -193,4 +212,3 @@ class Engine:
         else:
             new_game_state = replace(game_state, players=new_players)
             return new_game_state, []
-

@@ -19,8 +19,8 @@ class MarketCouplingCalculator:
         :return: The market coupling result
         """
         network = cls.create_pypsa_network(game_state)
+        network.optimize()
         return MarketCouplingResult(
-            solve_status=network.optimize()[1],
             bus_prices=network.buses_t.marginal_price,
             transmission_flows=network.lines_t.p0,
             assets_dispatch=network.generators_t.p
@@ -69,28 +69,6 @@ class MarketCouplingCalculator:
                 marginal_cost=load.marginal_price,
             )
         return network
-
-    @classmethod
-    def adjust_players_money(cls,
-        game_state: GameState,
-        market_coupling_result: MarketCouplingResult,
-    ) -> GameState:
-        """
-        Adjust the players' money based on the market coupling result.
-        :param game_state: The current state of the game
-        :param market_coupling_result: The result of the market coupling
-        :return: The updated game state with adjusted player balances
-        """
-        new_game_state = replace(game_state)
-        for player in game_state.players:
-            operating_cost = 0.0
-            market_cashflow = 0.0
-            for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
-                dispatched_volume = market_coupling_result.assets_dispatch[cls.get_pypsa_name(asset.id)]
-                operating_cost += abs(dispatched_volume) * asset.operating_cost
-                market_cashflow += dispatched_volume * asset.marginal_price
-            new_game_state = replace(new_game_state, players=game_state.players.add_money(player.id, market_cashflow - operating_cost))
-        return new_game_state
 
     @staticmethod
     def get_pypsa_name(id_in_game: BusId | TransmissionId | AssetId) -> str:

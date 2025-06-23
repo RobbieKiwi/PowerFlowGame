@@ -174,6 +174,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        power_std: Optional[float] = None,
         is_for_sale: Optional[bool] = None,
     ) -> Self:
         if asset is not None:
@@ -182,7 +183,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             self.dcs.append(asset)
             return self
 
-        dc = self._make_dc(cat=cat, owner=owner, bus=bus, is_for_sale=is_for_sale)
+        dc = self._make_dc(cat=cat, owner=owner, bus=bus, power_std=power_std, is_for_sale=is_for_sale)
         self.dcs.append(dc)
         return self
 
@@ -197,6 +198,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        power_std: Optional[float] = None,
         is_for_sale: Optional[bool] = None,
     ) -> AssetInfo:
         asset_id = next(self.id_counter)
@@ -209,6 +211,9 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
 
         if bus is None:
             bus = self._get_random_bus_id()
+
+        if power_std is None:
+            power_std = float(np.random.rand() * 10)
 
         if is_for_sale is None:
             is_for_sale = random_choice([True, False]) if owner is PlayerId.get_npc() else False
@@ -233,7 +238,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             asset_type=asset_type,
             bus=bus,
             power_expected=float(np.random.rand() * 100),
-            power_std=float(np.random.rand() * 10),
+            power_std=power_std,
             is_for_sale=is_for_sale,
             purchase_cost=float(np.random.rand() * 1000),
             operating_cost=float(np.random.rand() * 100),
