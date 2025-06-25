@@ -64,9 +64,9 @@ class AssetRepo(LdcRepo[AssetInfo]):
         df.loc[asset_id, "is_for_sale"] = False
         return self.update_frame(df)
 
-    def update_bid_price(self, asset_id: AssetId, bid_price: float) -> Self:
+    def update_marginal_price(self, asset_id: AssetId, marginal_price: float) -> Self:
         df = self.df.copy()
-        df.loc[asset_id, "bid_price"] = bid_price
+        df.loc[asset_id, "marginal_price"] = marginal_price
         return self.update_frame(df)
 
     # DELETE

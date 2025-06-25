@@ -46,13 +46,21 @@ class Engine:
         market_coupling_result: MarketCouplingResult,
     ) -> GameState:
         new_game_state = replace(game_state)
+        assets_dispatch = market_coupling_result.assets_dispatch
+        transmission_flows = market_coupling_result.transmission_flows
+        bus_prices = market_coupling_result.bus_prices
         for player in game_state.players:
             operating_cost = 0.0
             market_cashflow = 0.0
+            congestion_payments = 0.0
             for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
-                dispatched_volume = market_coupling_result.assets_dispatch[MarketCouplingCalculator.get_pypsa_name(asset.id)]
+                dispatched_volume = assets_dispatch[asset.id]
                 operating_cost += abs(dispatched_volume) * asset.operating_cost
                 market_cashflow += dispatched_volume * asset.marginal_price
+            for line in game_state.transmission.get_all_for_player(player.id, only_active=True):
+                volume = transmission_flows[line.id]
+                price_spread = bus_prices[line.bus1] - bus_prices[line.bus2]
+                congestion_payments += volume * price_spread
             new_game_state = replace(
                 new_game_state, players=game_state.players.add_money(player.id, market_cashflow - operating_cost)
             )
@@ -116,7 +124,6 @@ class Engine:
 
         player = game_state.players[msg.player_id]
         asset = game_state.assets[msg.asset_id]
-        sign_cashflow = game_state.assets.get_cashflow_sign(msg.asset_id)
         min_bid = game_state.game_settings.min_bid_price
         max_bid = game_state.game_settings.max_bid_price
 
@@ -129,12 +136,19 @@ class Engine:
                 f"[{min_bid}, {max_bid}]."
             )
 
-        if msg.bid_price * sign_cashflow * asset.power_expected - player.money < 0:  # todo: clarify what power expected and power std mean, and correct this condition if necessary
+        reliability_coefficient = 5  # 5 sigma covers ~99.9999% of the normal distribution
+        safe_expected_market_cashflow = 0
+        for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
+            max_expected_volume = asset.power_expected + reliability_coefficient * asset.power_std
+            bid_price = asset.marginal_price if asset.id != msg.asset_id else msg.bid_price
+            sign = game_state.assets.get_cashflow_sign(asset.id)
+            safe_expected_market_cashflow += bid_price * sign * max_expected_volume
+        if player.money - safe_expected_market_cashflow < 0:
             return make_failed_response(
                 f"Player {player.id} cannot afford the bid price of {msg.bid_price} for asset {asset.id}."
             )
 
-        new_asset = game_state.assets.update_bid_price(asset_id=msg.asset_id, bid_price=msg.bid_price)
+        new_asset = game_state.assets.update_marginal_price(asset_id=msg.asset_id, marginal_price=msg.bid_price)
         new_game_state = replace(game_state, assets=new_asset)
 
         response = UpdateBidResponse(
