@@ -55,8 +55,8 @@ class Engine:
             congestion_payments = 0.0
             for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
                 dispatched_volume = assets_dispatch[asset.id]
-                operating_cost += abs(dispatched_volume) * asset.operating_cost
-                market_cashflow += dispatched_volume * asset.marginal_price
+                operating_cost += abs(dispatched_volume) * asset.marginal_cost + asset.fixed_operating_cost
+                market_cashflow += dispatched_volume * asset.bid_price
             for line in game_state.transmission.get_all_for_player(player.id, only_active=True):
                 volume = transmission_flows[line.id]
                 price_spread = bus_prices[line.bus1] - bus_prices[line.bus2]
@@ -140,7 +140,7 @@ class Engine:
         safe_expected_market_cashflow = 0
         for asset in game_state.assets.get_all_for_player(player.id, only_active=True):
             max_expected_volume = asset.power_expected + reliability_coefficient * asset.power_std
-            bid_price = asset.marginal_price if asset.id != msg.asset_id else msg.bid_price
+            bid_price = asset.bid_price if asset.id != msg.asset_id else msg.bid_price
             sign = game_state.assets.get_cashflow_sign(asset.id)
             safe_expected_market_cashflow += bid_price * sign * max_expected_volume
         if player.money - safe_expected_market_cashflow < 0:
@@ -148,7 +148,7 @@ class Engine:
                 f"Player {player.id} cannot afford the bid price of {msg.bid_price} for asset {asset.id}."
             )
 
-        new_asset = game_state.assets.update_marginal_price(asset_id=msg.asset_id, marginal_price=msg.bid_price)
+        new_asset = game_state.assets.update_bid_price(asset_id=msg.asset_id, bid_price=msg.bid_price)
         new_game_state = replace(game_state, assets=new_asset)
 
         response = UpdateBidResponse(
@@ -192,11 +192,11 @@ class Engine:
         asset = game_state.assets[msg.asset_id]
         if not asset.is_for_sale:
             return make_failed_response(f"Asset {asset.id} is not for sale.")
-        elif player.money < asset.purchase_cost:
+        elif player.money < asset.minimum_acquisition_price:
             return make_failed_response(f"Player {player.id} cannot afford asset {asset.id}.")
 
         message = f"Player {player.id} successfully bought asset {asset.id}."
-        new_players = game_state.players.subtract_money(player_id=player.id, amount=asset.purchase_cost)
+        new_players = game_state.players.subtract_money(player_id=player.id, amount=asset.minimum_acquisition_price)
         new_assets = game_state.assets.change_owner(asset_id=asset.id, new_owner=player.id)
 
         new_game_state = replace(game_state, players=new_players, assets=new_assets)

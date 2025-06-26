@@ -39,8 +39,8 @@ class TestMarketCoupling(TestCase):
             for bus in game_state.buses:
                 bus_price = market_result.bus_prices.loc[mtu, bus.id]
                 assets_in_bus = game_state.assets.filter({"bus": bus.id})
-                generators_in_the_money = assets_in_bus.filter(lambda x: x["marginal_price"] <= bus_price + small_number, 'and', {"asset_type":AssetType.GENERATOR}).asset_ids
-                loads_in_the_money = assets_in_bus.filter(lambda x: x["marginal_price"] >= bus_price - small_number, 'and', {"asset_type":AssetType.LOAD}).asset_ids
+                generators_in_the_money = assets_in_bus.filter(lambda x: x["bid_price"] <= bus_price + small_number, 'and', {"asset_type":AssetType.GENERATOR}).asset_ids
+                loads_in_the_money = assets_in_bus.filter(lambda x: x["bid_price"] >= bus_price - small_number, 'and', {"asset_type":AssetType.LOAD}).asset_ids
                 asset_dispatch = market_result.assets_dispatch.loc[mtu]
 
                 dispatched_assets = set(asset_dispatch[asset_dispatch.abs() > 0].index) & set(assets_in_bus.asset_ids)

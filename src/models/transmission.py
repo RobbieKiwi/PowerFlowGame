@@ -15,9 +15,9 @@ class TransmissionInfo(LightDc):
     reactance: float = 0.0
     capacity: float = 100.0
     health: int = 5
-    operating_cost: float = 0.0
+    fixed_operating_cost: float = 0.0
     is_for_sale: bool = False
-    purchase_cost: float = 0.0  # 0 = Not for sale
+    minimum_acquisition_price: float = 0.0  # 0 = Not for sale
     is_active: bool = True
 
     def __post_init__(self) -> None:

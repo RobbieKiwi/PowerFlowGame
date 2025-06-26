@@ -261,9 +261,9 @@ class BaseGameInitializer(ABC):
                         reactance=np.random.uniform(0.1, 1.0),  # Random reactance for each transmission
                         capacity= np.random.uniform(10, 100),  # Random capacity for each transmission
                         health=5,
-                        operating_cost=np.random.uniform(0.01, 0.1),
+                        fixed_operating_cost=np.random.uniform(0.01, 0.1),
                         is_for_sale=True,
-                        purchase_cost=np.random.uniform(10, 100),  # Random purchase cost for each transmission
+                        minimum_acquisition_price=np.random.uniform(10, 100),  # Random purchase cost for each transmission
                     )
                 )
         if not additional_connections:
@@ -334,9 +334,9 @@ class DefaultGameInitializer(BaseGameInitializer):
                     power_expected=50.0,
                     power_std=0.0,
                     is_for_sale=False,
-                    purchase_cost=0.0,
-                    operating_cost=self.settings.initial_funds / 20,
-                    marginal_price=0.0,
+                    minimum_acquisition_price=0.0,
+                    fixed_operating_cost=self.settings.initial_funds / 20,
+                    marginal_cost=0.0,
                     bid_price=self.settings.initial_funds / 2,
                     is_ice_cream=True,
                 )
@@ -352,9 +352,9 @@ class DefaultGameInitializer(BaseGameInitializer):
                     power_expected=60.0,
                     power_std=0.5,
                     is_for_sale=True,
-                    purchase_cost=self.settings.initial_funds / 4,
-                    operating_cost=self.settings.initial_funds / 20,
-                    marginal_price=self.settings.initial_funds / 20,
+                    minimum_acquisition_price=self.settings.initial_funds / 4,
+                    fixed_operating_cost=self.settings.initial_funds / 20,
+                    marginal_cost=self.settings.initial_funds / 20,
                     bid_price=np.random.uniform(self.settings.initial_funds / 20, self.settings.initial_funds / 2),
                     is_ice_cream=False,
                 )
@@ -374,9 +374,9 @@ class DefaultGameInitializer(BaseGameInitializer):
                 reactance=np.random.uniform(0.1, 1.0),  # Random reactance for each transmission
                 capacity=np.random.uniform(10, 100),  # Random capacity for each transmission
                 health=5,
-                operating_cost=np.random.uniform(0.01, 0.1),
+                fixed_operating_cost=np.random.uniform(0.01, 0.1),
                 is_for_sale=True,
-                purchase_cost=np.random.uniform(10, 100),  # Random purchase cost for each transmission
+                minimum_acquisition_price=np.random.uniform(10, 100),  # Random purchase cost for each transmission
             )
             for i, bus_pair in enumerate(topology)
         ]

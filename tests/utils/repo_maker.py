@@ -226,11 +226,11 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         is_icecream = cat == "IceCream"
         offset = {"Generator": 0, "Load": 200, "IceCream": 500}[cat]
 
-        marginal_price = float(np.random.rand() * 50) + offset
+        marginal_cost = float(np.random.rand() * 50) + offset
         if asset_type == AssetType.GENERATOR:
-            bid_price = marginal_price + float(np.random.rand() * 50)
+            bid_price = marginal_cost + float(np.random.rand() * 50)
         else:
-            bid_price = marginal_price - float(np.random.rand() * 50)
+            bid_price = marginal_cost - float(np.random.rand() * 50)
 
         return AssetInfo(
             id=AssetId(asset_id),
@@ -240,9 +240,9 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             power_expected=float(np.random.rand() * 100),
             power_std=power_std,
             is_for_sale=is_for_sale,
-            purchase_cost=float(np.random.rand() * 1000),
-            operating_cost=float(np.random.rand() * 100),
-            marginal_price=marginal_price,
+            minimum_acquisition_price=float(np.random.rand() * 1000),
+            fixed_operating_cost=float(np.random.rand() * 100),
+            marginal_cost=marginal_cost,
             bid_price=bid_price,
             is_ice_cream=is_icecream,
             is_active=np.random.rand() > 0.2,
@@ -297,9 +297,9 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
             reactance=float(np.random.rand() * 10 + 1),
             capacity=float(np.random.rand() * 100 + 50),
             health=int(np.random.randint(1, 6)),
-            operating_cost=float(np.random.rand() * 100),
+            fixed_operating_cost=float(np.random.rand() * 100),
             is_for_sale=random_choice([True, False]),
-            purchase_cost=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
+            minimum_acquisition_price=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
             is_active=np.random.rand() > 0.2,
         )
 
