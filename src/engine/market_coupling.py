@@ -79,7 +79,7 @@ class MarketCouplingCalculator:
     @classmethod
     def get_bus_prices(cls, network: pypsa.Network) -> pd.DataFrame:
         bus_prices = network.buses_t.marginal_price
-        bus_prices.columns = [cls.get_game_id(pypsa_name) for pypsa_name in bus_prices.columns]  # translate back to game IDs
+        bus_prices.columns = [cls.get_game_id(pypsa_name) for pypsa_name in bus_prices.columns]
         return bus_prices
 
     @classmethod
@@ -110,15 +110,8 @@ class MarketCouplingCalculator:
         raise ValueError(f"Unsupported ID type: {type(id_in_game)}")
 
     @staticmethod
-    def get_game_id(pypsa_name: str) -> BusId | TransmissionId | AssetId:
-        def get_id_substring(name: str) -> str:
-            return name.split("_")[-1]
-
-        if pypsa_name.startswith("bus_"):
-            return BusId(get_id_substring(pypsa_name))
-        elif pypsa_name.startswith("line_"):
-            return TransmissionId(get_id_substring(pypsa_name))
-        elif pypsa_name.startswith("asset_"):
-            return AssetId(get_id_substring(pypsa_name))
+    def get_game_id(pypsa_name: str) -> str:
+        if pypsa_name.startswith("bus_") or pypsa_name.startswith("line_") or pypsa_name.startswith("asset_"):
+            return pypsa_name.split("_")[-1]
         else:
             raise ValueError(f"Unknown PyPSA name format: {pypsa_name}")
