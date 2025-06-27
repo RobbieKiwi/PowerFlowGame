@@ -18,7 +18,7 @@ def game_states_are_equal(game_state1: GameState, game_state2: GameState) -> boo
             return False
     else:
         for attribute, df in vars(game_state1.market_coupling_result).items():
-            if not df.equals(getattr(game_state2.market_coupling_result, attribute)):
+            if not df.equals(getattr(game_state2.market_coupling_result, attribute)): # assumes all attributes are DataFrames
                 return False
     return True
 

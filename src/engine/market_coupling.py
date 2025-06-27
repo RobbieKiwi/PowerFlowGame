@@ -110,8 +110,15 @@ class MarketCouplingCalculator:
         raise ValueError(f"Unsupported ID type: {type(id_in_game)}")
 
     @staticmethod
-    def get_game_id(pypsa_name: str) -> str:
-        if pypsa_name.startswith("bus_") or pypsa_name.startswith("line_") or pypsa_name.startswith("asset_"):
-            return pypsa_name.split("_")[-1]
+    def get_game_id(pypsa_name: str) -> BusId | TransmissionId | AssetId:
+        def get_id_substring(name: str) -> str:
+            return name.split("_")[-1]
+
+        if pypsa_name.startswith("bus_"):
+            return BusId(get_id_substring(pypsa_name))
+        elif pypsa_name.startswith("line_"):
+            return TransmissionId(get_id_substring(pypsa_name))
+        elif pypsa_name.startswith("asset_"):
+            return AssetId(get_id_substring(pypsa_name))
         else:
             raise ValueError(f"Unknown PyPSA name format: {pypsa_name}")

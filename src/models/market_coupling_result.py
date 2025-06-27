@@ -2,6 +2,7 @@ from typing import Self
 import pandas as pd
 
 from src.tools.serialization import SimpleDict
+from src.models.ids import BusId, TransmissionId, AssetId
 
 
 class MarketCouplingResult:
@@ -61,9 +62,11 @@ class MarketCouplingResult:
     @classmethod
     def from_simple_dict(cls, simple_dict: SimpleDict) -> Self:
         return cls(
-            bus_prices=pd.DataFrame.from_dict(simple_dict["bus_prices"]),
-            transmission_flows=pd.DataFrame.from_dict(simple_dict["transmission_flows"]),
-            assets_dispatch=pd.DataFrame.from_dict(simple_dict["assets_dispatch"])
+            bus_prices=pd.DataFrame.from_dict({BusId(k): v for k, v in simple_dict["bus_prices"].items()}),
+            transmission_flows=pd.DataFrame.from_dict(
+                {TransmissionId(k): v for k, v in simple_dict["transmission_flows"].items()}
+            ),
+            assets_dispatch=pd.DataFrame.from_dict({AssetId(k): v for k, v in simple_dict["assets_dispatch"].items()}),
         )
 
     @staticmethod
