@@ -19,7 +19,7 @@ class MarketCouplingResult:
     def bus_prices(self) -> pd.DataFrame:
         """
         Get the bus prices from the market coupling result.
-        The DataFrame has a multi-index with time units and columns representing bus IDs.
+        The DataFrame index with represent market time units and columns representing bus IDs.
         The values are the marginal prices at each bus for each time unit.
         | time_unit | bus_id_1 | bus_id_2 | ... |
         |-----------|----------|----------|-----|
@@ -31,7 +31,7 @@ class MarketCouplingResult:
     def transmission_flows(self) -> pd.DataFrame:
         """
         Get the transmission flows from the market coupling result.
-        The DataFrame has a multi-index with time units and columns representing transmission line IDs.
+        The DataFrame index with represent market time units and columns representing transmission line IDs.
         The values are the power flows on each transmission line for each time unit.
         | time_unit | transmission_id_1 | transmission_id_2 | ... |
         |-----------|-------------------|-------------------|-----|
@@ -43,7 +43,7 @@ class MarketCouplingResult:
     def assets_dispatch(self) -> pd.DataFrame:
         """
         Get the assets dispatch from the market coupling result.
-        The DataFrame has a multi-index with time units and columns representing asset IDs.
+        The DataFrame index with represent market time units and columns representing asset IDs.
         The values are the dispatched power for each asset for each time unit.
         | time_unit | asset_id_1 | asset_id_2 | ... |
         |-----------|------------|------------|-----|
