@@ -24,13 +24,15 @@ class BusTopologyMaker:
         return line_layout.points
 
     @staticmethod
-    def make_grid(n_buses_per_row: int, n_buses_per_col: int, x_range: float = 10.0, y_range: float = 10.0) -> list[Point]:
+    def make_grid(
+        n_buses_per_row: int, n_buses_per_col: int, x_range: float = 10.0, y_range: float = 10.0
+    ) -> list[Point]:
         grid_layout = Geometry.make_grid(
             start_corner=Point(x=0.0, y=0.0),
             width=x_range,
             height=y_range,
             n_points_in_x=n_buses_per_row,
-            n_points_in_y=n_buses_per_col
+            n_points_in_y=n_buses_per_col,
         )
         return grid_layout.points
 
@@ -259,11 +261,13 @@ class BaseGameInitializer(ABC):
                         bus1=id_bus1,
                         bus2=id_bus2,
                         reactance=np.random.uniform(0.1, 1.0),  # Random reactance for each transmission
-                        capacity= np.random.uniform(10, 100),  # Random capacity for each transmission
+                        capacity=np.random.uniform(10, 100),  # Random capacity for each transmission
                         health=5,
                         fixed_operating_cost=np.random.uniform(0.01, 0.1),
                         is_for_sale=True,
-                        minimum_acquisition_price=np.random.uniform(10, 100),  # Random purchase cost for each transmission
+                        minimum_acquisition_price=np.random.uniform(
+                            10, 100
+                        ),  # Random purchase cost for each transmission
                     )
                 )
         if not additional_connections:

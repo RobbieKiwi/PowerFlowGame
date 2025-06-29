@@ -24,7 +24,7 @@ class MarketCouplingCalculator:
         return MarketCouplingResult(
             bus_prices=cls.get_bus_prices(network),
             transmission_flows=cls.get_transmission_flows(network),
-            assets_dispatch=cls.get_assets_dispatch(network)
+            assets_dispatch=cls.get_assets_dispatch(network),
         )
 
     @classmethod
@@ -37,11 +37,7 @@ class MarketCouplingCalculator:
         network = pypsa.Network()
         network.add(class_name="Carrier", name="AC")
         for bus in game_state.buses:
-            network.add(
-                class_name="Bus",
-                name=cls.get_pypsa_name(bus.id),
-                carrier="AC"
-            )
+            network.add(class_name="Bus", name=cls.get_pypsa_name(bus.id), carrier="AC")
         for line in game_state.transmission:
             network.add(
                 class_name="Line",
@@ -60,7 +56,7 @@ class MarketCouplingCalculator:
                 bus=cls.get_pypsa_name(generator.bus),
                 marginal_cost=generator.bid_price,
                 p_nom=np.random.normal(loc=generator.power_expected, scale=generator.power_std),
-                carrier="AC"
+                carrier="AC",
             )
         for load in game_state.assets.filter({"asset_type": AssetType.LOAD}):
             # Loads are treated as generators with negative power in PyPSA
@@ -72,7 +68,7 @@ class MarketCouplingCalculator:
                 p_min_pu=-1.0,
                 p_nom=np.random.normal(loc=load.power_expected, scale=load.power_std),
                 marginal_cost=load.bid_price,
-                carrier="AC"
+                carrier="AC",
             )
         return network
 

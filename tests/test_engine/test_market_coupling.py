@@ -39,8 +39,12 @@ class TestMarketCoupling(TestCase):
             for bus in game_state.buses:
                 bus_price = market_result.bus_prices.loc[mtu, bus.id]
                 assets_in_bus = game_state.assets.filter({"bus": bus.id})
-                generators_in_the_money = assets_in_bus.filter(lambda x: x["bid_price"] <= bus_price + small_number, 'and', {"asset_type":AssetType.GENERATOR}).asset_ids
-                loads_in_the_money = assets_in_bus.filter(lambda x: x["bid_price"] >= bus_price - small_number, 'and', {"asset_type":AssetType.LOAD}).asset_ids
+                generators_in_the_money = assets_in_bus.filter(
+                    lambda x: x["bid_price"] <= bus_price + small_number, 'and', {"asset_type": AssetType.GENERATOR}
+                ).asset_ids
+                loads_in_the_money = assets_in_bus.filter(
+                    lambda x: x["bid_price"] >= bus_price - small_number, 'and', {"asset_type": AssetType.LOAD}
+                ).asset_ids
                 asset_dispatch = market_result.assets_dispatch.loc[mtu]
 
                 dispatched_assets = set(asset_dispatch[asset_dispatch.abs() > 0].index) & set(assets_in_bus.asset_ids)
@@ -52,8 +56,12 @@ class TestMarketCoupling(TestCase):
         market_result = MarketCouplingCalculator.run(game_state)
 
         for mtu in market_result.assets_dispatch.index:
-            total_generation = market_result.assets_dispatch.loc[mtu][game_state.assets.filter({"asset_type": AssetType.GENERATOR}).asset_ids].sum()
-            total_load = market_result.assets_dispatch.loc[mtu][game_state.assets.filter({"asset_type": AssetType.LOAD}).asset_ids].sum()
+            total_generation = market_result.assets_dispatch.loc[mtu][
+                game_state.assets.filter({"asset_type": AssetType.GENERATOR}).asset_ids
+            ].sum()
+            total_load = market_result.assets_dispatch.loc[mtu][
+                game_state.assets.filter({"asset_type": AssetType.LOAD}).asset_ids
+            ].sum()
 
             self.assertAlmostEqual(total_generation, -total_load, places=5)
 
@@ -65,6 +73,15 @@ class TestMarketCoupling(TestCase):
             for transmission in game_state.transmission:
                 flow = market_result.transmission_flows.loc[mtu, transmission.id]
                 if flow == transmission.capacity:
-                    self.assertGreater(abs(market_result.bus_prices.loc[mtu, transmission.bus1] - market_result.bus_prices.loc[mtu, transmission.bus2]), 0)
+                    self.assertGreater(
+                        abs(
+                            market_result.bus_prices.loc[mtu, transmission.bus1]
+                            - market_result.bus_prices.loc[mtu, transmission.bus2]
+                        ),
+                        0,
+                    )
                 else:
-                    self.assertAlmostEqual(market_result.bus_prices.loc[mtu, transmission.bus1], market_result.bus_prices.loc[mtu, transmission.bus2])
+                    self.assertAlmostEqual(
+                        market_result.bus_prices.loc[mtu, transmission.bus1],
+                        market_result.bus_prices.loc[mtu, transmission.bus2],
+                    )

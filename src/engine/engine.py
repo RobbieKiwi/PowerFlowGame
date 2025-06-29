@@ -80,18 +80,30 @@ class Engine:
         """
         if msg.phase == Phase.CONSTRUCTION:
             new_game_state = replace(game_state, phase=msg.phase.get_next())
-            return new_game_state, [GameUpdate(player_id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.") for player_id in game_state.players.player_ids]
+            return new_game_state, [
+                GameUpdate(player_id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.")
+                for player_id in game_state.players.player_ids
+            ]
         elif msg.phase == Phase.DA_AUCTION:
             market_result = MarketCouplingCalculator.run(game_state)
             gs_updated_player_money = cls.adjust_players_aftermarket_money(game_state, market_result)
-            new_game_state = replace(gs_updated_player_money, market_coupling_result=market_result, phase=msg.phase.get_next())
+            new_game_state = replace(
+                gs_updated_player_money, market_coupling_result=market_result, phase=msg.phase.get_next()
+            )
             return new_game_state, [
-                GameUpdate(player_id, game_state=new_game_state, message=f"Day-ahead market has been cleared. Your balance was adjusted accordingly from ${game_state.players[player_id].money} to ${new_game_state.players[player_id].money}. Phase changed to {new_game_state.phase}.")
+                GameUpdate(
+                    player_id,
+                    game_state=new_game_state,
+                    message=f"Day-ahead market has been cleared. Your balance was adjusted accordingly from ${game_state.players[player_id].money} to ${new_game_state.players[player_id].money}. Phase changed to {new_game_state.phase}.",
+                )
                 for player_id in new_game_state.players.player_ids
             ]
         elif msg.phase == Phase.SNEAKY_TRICKS:
             new_game_state = replace(game_state, phase=msg.phase.get_next())
-            return new_game_state, [GameUpdate(id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.") for id in game_state.players.player_ids]
+            return new_game_state, [
+                GameUpdate(id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.")
+                for id in game_state.players.player_ids
+            ]
         # TODO in the new phase, one or all players have turns, so we need to update the game state accordingly
         else:
             raise NotImplementedError(f"Phase {msg.phase} not implemented.")
@@ -132,8 +144,7 @@ class Engine:
 
         if not (min_bid <= msg.bid_price <= max_bid):
             return make_failed_response(
-                f"Bid price {msg.bid_price} is not within the allowed range "
-                f"[{min_bid}, {max_bid}]."
+                f"Bid price {msg.bid_price} is not within the allowed range " f"[{min_bid}, {max_bid}]."
             )
 
         reliability_coefficient = 5  # 5 sigma covers ~99.9999% of the normal distribution

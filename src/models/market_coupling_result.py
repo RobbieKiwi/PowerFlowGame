@@ -7,14 +7,20 @@ from src.models.ids import BusId, TransmissionId, AssetId
 
 class MarketCouplingResult:
 
-    def __init__(self, bus_prices: pd.DataFrame, transmission_flows: pd.DataFrame, assets_dispatch: pd.DataFrame) -> None:
+    def __init__(
+        self, bus_prices: pd.DataFrame, transmission_flows: pd.DataFrame, assets_dispatch: pd.DataFrame
+    ) -> None:
         self._bus_prices = self.clean_pypsa_metadata(bus_prices)
         self._transmission_flows = self.clean_pypsa_metadata(transmission_flows)
         self._assets_dispatch = self.clean_pypsa_metadata(assets_dispatch)
 
         market_time_units = self._bus_prices.index
-        assert self._transmission_flows.index.equals(market_time_units), "Transmission flows index does not match bus prices index"
-        assert self._assets_dispatch.index.equals(market_time_units), "Assets dispatch index does not match bus prices index"
+        assert self._transmission_flows.index.equals(
+            market_time_units
+        ), "Transmission flows index does not match bus prices index"
+        assert self._assets_dispatch.index.equals(
+            market_time_units
+        ), "Assets dispatch index does not match bus prices index"
 
     @property
     def bus_prices(self) -> pd.DataFrame:
