@@ -1,8 +1,10 @@
 import colorsys
 from functools import cached_property
-from typing import Union, Literal
+from typing import Union, Literal, Self
 
 import numpy as np
+
+from src.tools.serialization import SimpleDict
 
 
 class Color:
@@ -118,6 +120,13 @@ class Color:
     def brightness_factor(self) -> float:
         # A number between 0 and 1, where 0 is black and 1 is white.
         return self.hls[1] / Color("white").hls[1]
+
+    def to_string(self) -> str:
+        return self.rgb_hex_str
+
+    @classmethod
+    def from_string(cls, s: str) -> Self:
+        return cls(x=s, color_model="rgb")
 
 
 def get_contrasting_color(color: Color) -> Color:

@@ -19,6 +19,14 @@ class Serializable(Protocol):
     def from_simple_dict(cls, simple_dict: SimpleDict) -> Self: ...
 
 
+@runtime_checkable
+class Stringable(Protocol):
+    def to_string(self) -> str: ...
+
+    @classmethod
+    def from_string(cls, s: str) -> Self: ...
+
+
 GenericSerializable = TypeVar("GenericSerializable", bound=Serializable)
 
 
@@ -30,7 +38,9 @@ def deserialize(x: str, cls: type[GenericSerializable]) -> GenericSerializable:
     return cls.from_simple_dict(json.loads(x))
 
 
-def simplify_type(x: Enum | WrappedInt | Primitive) -> Primitive:
+def simplify_type(x: Stringable | Enum | WrappedInt | Primitive) -> Primitive:
+    if isinstance(x, Stringable):
+        return x.to_string()
     if isinstance(x, Enum):
         return x.value
     if isinstance(x, WrappedInt):
@@ -49,6 +59,8 @@ def simplify_optional_type(
 
 
 def un_simplify_type(x: Primitive, t: type[T]) -> T:
+    if issubclass(t, Stringable):
+        return t.from_string(x)
     if t in primitives:
         return t(x)
     if issubclass(t, Enum):

@@ -23,7 +23,7 @@ class PlayerLegend(PlotObject):
 
     @property
     def color(self) -> Color:
-        return self.player.color_obj
+        return self.player.color
 
     @property
     def data_dict(self) -> dict[str, str]:

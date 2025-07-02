@@ -12,19 +12,9 @@ from src.models.ids import PlayerId
 class Player(LightDc):
     id: PlayerId
     name: str
-    color: str
+    color: Color
     money: float
     is_having_turn: bool  # Note that multiple players can have turns at the same time
-
-    def __post_init__(self) -> None:
-        assert (
-            self.color.startswith("#") and len(self.color) == 7 and int(self.color[1:], 16) < 0xFFFFFF
-        ), "Invalid color format"
-
-    @cached_property
-    def color_obj(self) -> Color:
-        # TODO change the main color property to a color object
-        return Color(x=self.color)
 
 
 class PlayerRepo(LdcRepo[Player]):

@@ -1,14 +1,14 @@
-from dataclasses import replace
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+import pypsa
 
 from src.models.assets import AssetId, AssetType
-from src.models.transmission import TransmissionId
 from src.models.buses import BusId
 from src.models.game_state import GameState
 from src.models.market_coupling_result import MarketCouplingResult
-
-import pandas as pd
-import numpy as np
-import pypsa
+from src.models.transmission import TransmissionId
 
 
 class MarketCouplingCalculator:
@@ -35,6 +35,8 @@ class MarketCouplingCalculator:
         :return: A PyPSA network object
         """
         network = pypsa.Network()
+        network.set_snapshots(pd.Index([0], name="time"))  # Single snapshot for simplicity
+
         network.add(class_name="Carrier", name="AC")
         for bus in game_state.buses:
             network.add(class_name="Bus", name=cls.get_pypsa_name(bus.id), carrier="AC")
@@ -74,21 +76,24 @@ class MarketCouplingCalculator:
 
     @classmethod
     def get_bus_prices(cls, network: pypsa.Network) -> pd.DataFrame:
-        bus_prices = network.buses_t.marginal_price
-        bus_prices.columns = [cls.get_game_id(pypsa_name) for pypsa_name in bus_prices.columns]
-        return bus_prices
+        return cls._tidy_df(df=network.buses_t.marginal_price, column_name="Bus")
 
     @classmethod
     def get_transmission_flows(cls, network: pypsa.Network) -> pd.DataFrame:
-        transmission_flows = network.lines_t.p0
-        transmission_flows.columns = [cls.get_game_id(pypsa_name) for pypsa_name in transmission_flows.columns]
-        return transmission_flows
+        return cls._tidy_df(df=network.lines_t.p0, column_name="Line")
 
     @classmethod
     def get_assets_dispatch(cls, network: pypsa.Network) -> pd.DataFrame:
-        assets_dispatch = network.generators_t.p
-        assets_dispatch.columns = [cls.get_game_id(pypsa_name) for pypsa_name in assets_dispatch.columns]
-        return assets_dispatch
+        return cls._tidy_df(df=network.generators_t.p, column_name="Asset")
+
+    @classmethod
+    def _tidy_df(cls, df: pd.DataFrame, column_name: Optional[str] = None) -> pd.DataFrame:
+        df = df.copy()
+        df.rename(columns=cls.get_game_id, inplace=True)
+        df.index = df.index.rename("time")
+        if column_name is not None:
+            df.columns = df.columns.rename(column_name)
+        return df
 
     @staticmethod
     def get_pypsa_name(id_in_game: BusId | TransmissionId | AssetId) -> str:
