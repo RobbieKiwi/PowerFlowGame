@@ -1,4 +1,5 @@
 from src.models.game_state import GameState
+import pandas as pd
 
 
 def game_states_are_equal(game_state1: GameState, game_state2: GameState) -> bool:
@@ -17,8 +18,13 @@ def game_states_are_equal(game_state1: GameState, game_state2: GameState) -> boo
         if not game_state2.market_coupling_result is None:
             return False
     else:
-        if game_state1.market_coupling_result != game_state2.market_coupling_result:
-            return False
+        for attribute, df in vars(game_state1.market_coupling_result).items():
+            if not isinstance(df, pd.DataFrame):
+                raise NotImplementedError(f"Attribute {attribute} in MarketCouplingResult is not a DataFrame")
+            if not df.equals(
+                getattr(game_state2.market_coupling_result, attribute)
+            ):
+                return False
     return True
 
 

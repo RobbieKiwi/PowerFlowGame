@@ -174,6 +174,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        power_std: Optional[float] = None,
         is_for_sale: Optional[bool] = None,
     ) -> Self:
         if asset is not None:
@@ -182,7 +183,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             self.dcs.append(asset)
             return self
 
-        dc = self._make_dc(cat=cat, owner=owner, bus=bus, is_for_sale=is_for_sale)
+        dc = self._make_dc(cat=cat, owner=owner, bus=bus, power_std=power_std, is_for_sale=is_for_sale)
         self.dcs.append(dc)
         return self
 
@@ -197,6 +198,7 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         cat: Optional[Literal["Generator", "Load", "IceCream"]] = None,
         owner: Optional[PlayerId] = None,
         bus: Optional[BusId] = None,
+        power_std: Optional[float] = None,
         is_for_sale: Optional[bool] = None,
     ) -> AssetInfo:
         asset_id = next(self.id_counter)
@@ -210,6 +212,9 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         if bus is None:
             bus = self._get_random_bus_id()
 
+        if power_std is None:
+            power_std = float(np.random.rand() * 10)
+
         if is_for_sale is None:
             is_for_sale = random_choice([True, False]) if owner is PlayerId.get_npc() else False
 
@@ -221,11 +226,11 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
         is_icecream = cat == "IceCream"
         offset = {"Generator": 0, "Load": 200, "IceCream": 500}[cat]
 
-        marginal_price = float(np.random.rand() * 50) + offset
+        marginal_cost = float(np.random.rand() * 50) + offset
         if asset_type == AssetType.GENERATOR:
-            bid_price = marginal_price + float(np.random.rand() * 50)
+            bid_price = marginal_cost + float(np.random.rand() * 50)
         else:
-            bid_price = marginal_price - float(np.random.rand() * 50)
+            bid_price = marginal_cost - float(np.random.rand() * 50)
 
         return AssetInfo(
             id=AssetId(asset_id),
@@ -233,11 +238,11 @@ class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):
             asset_type=asset_type,
             bus=bus,
             power_expected=float(np.random.rand() * 100),
-            power_std=float(np.random.rand() * 10),
+            power_std=power_std,
             is_for_sale=is_for_sale,
-            purchase_cost=float(np.random.rand() * 1000),
-            operating_cost=float(np.random.rand() * 100),
-            marginal_price=marginal_price,
+            minimum_acquisition_price=float(np.random.rand() * 1000),
+            fixed_operating_cost=float(np.random.rand() * 100),
+            marginal_cost=marginal_cost,
             bid_price=bid_price,
             is_ice_cream=is_icecream,
             is_active=np.random.rand() > 0.2,
@@ -290,10 +295,11 @@ class TransmissionRepoMaker(RepoMaker[TransmissionRepo, TransmissionInfo]):
             bus1=bus1,
             bus2=bus2,
             reactance=float(np.random.rand() * 10 + 1),
+            capacity=float(np.random.rand() * 100 + 50),
             health=int(np.random.randint(1, 6)),
-            operating_cost=float(np.random.rand() * 100),
+            fixed_operating_cost=float(np.random.rand() * 100),
             is_for_sale=random_choice([True, False]),
-            purchase_cost=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
+            minimum_acquisition_price=float(np.random.rand() * 1000) if random_choice([True, False]) else 0.0,
             is_active=np.random.rand() > 0.2,
         )
 

@@ -1,9 +1,11 @@
 from unittest import TestCase
+from dataclasses import replace
 
 from src.models.game_state import GameState
 from src.tools.serialization import serialize, deserialize
 from tests.utils.comparisons import assert_game_states_are_equal
 from tests.utils.game_state_maker import GameStateMaker
+from src.engine.market_coupling import MarketCouplingCalculator
 
 
 class TestGameState(TestCase):
@@ -13,6 +15,9 @@ class TestGameState(TestCase):
     def test_serialization(self) -> None:
         # Test the serialization of the GameState object
         game_state = GameStateMaker().make()
+        market_result = MarketCouplingCalculator.run(game_state)
+        game_state = replace(game_state, market_coupling_result=market_result)
+
         json_str = serialize(game_state)
         re_built_state = deserialize(x=json_str, cls=GameState)
 

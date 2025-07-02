@@ -13,10 +13,11 @@ class TransmissionInfo(LightDc):
     bus1: BusId
     bus2: BusId
     reactance: float = 0.0
+    capacity: float = 100.0
     health: int = 5
-    operating_cost: float = 0.0
+    fixed_operating_cost: float = 0.0
     is_for_sale: bool = False
-    purchase_cost: float = 0.0  # 0 = Not for sale
+    minimum_acquisition_price: float = 0.0  # 0 = Not for sale
     is_active: bool = True
 
     def __post_init__(self) -> None:
@@ -34,8 +35,11 @@ class TransmissionRepo(LdcRepo[TransmissionInfo]):
     def transmission_ids(self) -> list[TransmissionId]:
         return [TransmissionId(x) for x in self.df.index.tolist()]
 
-    def get_all_for_player(self, player_id: PlayerId) -> Self:
-        return self.filter({"owner_player": player_id})
+    def get_all_for_player(self, player_id: PlayerId, only_active: bool = False) -> Self:
+        if only_active:
+            return self.filter({"owner_player": player_id, "is_active": True})
+        else:
+            return self.filter({"owner_player": player_id})
 
     def get_all_at_bus(self, bus: BusId) -> Self:
         return self.filter({"bus1": bus}, "or", {"bus2": bus})

@@ -19,7 +19,7 @@ class TestAssets(TestCase):
         game_state = GameStateMaker().make()
         dumb_message = DummyMessage(player_id=PlayerId(5))
         with self.assertRaises(NotImplementedError):
-            Engine.handle_update_bid_message(game_state=game_state, msg=dumb_message)  # noqa
+            Engine.handle_message(game_state=game_state, msg=dumb_message)  # noqa
 
     def test_update_bid_message(self) -> None:
         player_repo = PlayerRepoMaker.make_quick()

@@ -64,6 +64,20 @@ class PlayerRepo(LdcRepo[Player]):
         # Transfer money from one player to another
         return self.add_money(to_player, amount).subtract_money(from_player, amount)
 
+    def _set_turn(self, player_id: PlayerId | list[PlayerId], is_having_turn: bool) -> Self:
+        # Set whether a player is having a turn or not
+        df = self.df.copy()
+        df.loc[player_id, "is_having_turn"] = is_having_turn
+        return self.update_frame(df)
+
+    def end_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
+        # End players' turn
+        return self._set_turn(player_id, False)
+
+    def start_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
+        # Start a players' turn
+        return self._set_turn(player_id, True)
+
     # DELETE
     def delete_player(self, player_id: PlayerId) -> Self:
         return self.drop_one(player_id)

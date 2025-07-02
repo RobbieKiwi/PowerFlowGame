@@ -36,6 +36,7 @@ class PlayerToGameMessage(Message, ABC):
 class GameToPlayerMessage(Message, ABC):
     player_id: PlayerId
     game_state: GameState
+    message: str
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__}(Engine -> {self.player_id})>"
@@ -49,7 +50,7 @@ FromGameMessage = Union[InternalMessage, GameToPlayerMessage]
 
 
 @dataclass(frozen=True)
-class NewPhase(InternalMessage):
+class ConcludePhase(InternalMessage):
     phase: Phase
 
 
@@ -81,10 +82,9 @@ class BuyAssetRequest(PlayerToGameMessage):
 class BuyAssetResponse(GameToPlayerMessage):
     game_state: GameState
     success: bool
-    message: str
     asset_id: AssetId
 
 
 @dataclass(frozen=True)
 class EndTurn(PlayerToGameMessage):
-    pass
+    player_id: PlayerId
