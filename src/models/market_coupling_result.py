@@ -71,6 +71,7 @@ class MarketCouplingResult:
         * Columns: Transmission IDs (as ints)
         * Values: Flows
         """
+        # TODO add another cached property that contains congestion rents?
         return self._transmission_flows.copy()
 
     @property

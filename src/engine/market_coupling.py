@@ -1,3 +1,5 @@
+import logging
+import warnings
 from typing import Optional
 
 import numpy as np
@@ -14,13 +16,9 @@ from src.models.transmission import TransmissionId
 class MarketCouplingCalculator:
     @classmethod
     def run(cls, game_state: GameState) -> MarketCouplingResult:
-        """
-        Run the market coupling algorithm.
-        :param game_state: A copy of the game state
-        :return: The market coupling result
-        """
         network = cls.create_pypsa_network(game_state)
-        network.optimize()
+        cls.optimize_network(network=network)
+
         return MarketCouplingResult(
             bus_prices=cls.get_bus_prices(network),
             transmission_flows=cls.get_transmission_flows(network),
@@ -73,6 +71,16 @@ class MarketCouplingCalculator:
                 carrier="AC",
             )
         return network
+
+    @classmethod
+    def optimize_network(cls, network: pypsa.Network) -> None:
+        # TODO All solver logs have been silenced apart from the Highs Banner. Maybe there is an option here?
+        #  https://github.com/ERGO-Code/HiGHS/blob/364c83a51e44ba6c27def9c8fc1a49b1daf5ad5c/highs/highspy/_core/__init__.pyi#L401
+        with warnings.catch_warnings(action="ignore"):
+            logging.getLogger("linopy").setLevel(logging.ERROR)
+            logging.getLogger("pypsa").setLevel(logging.ERROR)
+            network.optimize(solver_name="highs", solver_options={"log_to_console": False, "output_flag": False})
+        return
 
     @classmethod
     def get_bus_prices(cls, network: pypsa.Network) -> pd.DataFrame:
