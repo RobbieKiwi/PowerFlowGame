@@ -3,8 +3,7 @@ from functools import cached_property
 from typing import Union, Literal, Self
 
 import numpy as np
-
-from src.tools.serialization import SimpleDict
+from matplotlib import colormaps
 
 
 class Color:
@@ -134,3 +133,13 @@ def get_contrasting_color(color: Color) -> Color:
         return Color("#FFFFFF")
     else:
         return Color("#000000")
+
+
+def get_random_player_colors(n: int) -> list[Color]:
+    color_map = colormaps.get_cmap('hsv')
+    colors_np = [color_map(i / n) for i in range(n)]
+
+    def convert_color(color: tuple[float, float, float, float]) -> Color:
+        return Color(x=(round(color[0] * 255), int(color[1] * 255), int(color[2] * 255)), color_model="rgb")
+
+    return [convert_color(color) for color in colors_np]
