@@ -1,4 +1,3 @@
-from functools import cached_property
 from typing import Self
 
 import pandas as pd
@@ -47,14 +46,14 @@ class MarketCouplingResult:
     def __repr__(self) -> str:
         return self.__str__()
 
-    @cached_property
+    @property
     def market_time_units(self) -> pd.Index:
         """
         :return: Market time units (index of the DataFrames)
         """
         return self._bus_prices.index
 
-    @cached_property
+    @property
     def bus_prices(self) -> pd.DataFrame:
         """
         :return: DataFrame with
@@ -62,9 +61,9 @@ class MarketCouplingResult:
         * Columns: Bus IDs (as ints)
         * Values: Marginal prices
         """
-        return self._bus_prices
+        return self._bus_prices.copy()
 
-    @cached_property
+    @property
     def transmission_flows(self) -> pd.DataFrame:
         """
         :return: DataFrame with
@@ -72,17 +71,17 @@ class MarketCouplingResult:
         * Columns: Transmission IDs (as ints)
         * Values: Flows
         """
-        return self._transmission_flows
+        return self._transmission_flows.copy()
 
-    @cached_property
+    @property
     def assets_dispatch(self) -> pd.DataFrame:
         """
         :return: DataFrame with
         * Index: Market time units
         * Columns: Asset IDs (as ints)
-        * Values: Dispatched power
+        * Values: Produced power for generators or consumed power for loads, always positive.
         """
-        return self._assets_dispatch
+        return self._assets_dispatch.copy()
 
     def to_simple_dict(self) -> SimpleDict:
         return {

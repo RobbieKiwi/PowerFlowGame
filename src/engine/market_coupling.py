@@ -84,7 +84,8 @@ class MarketCouplingCalculator:
 
     @classmethod
     def get_assets_dispatch(cls, network: pypsa.Network) -> pd.DataFrame:
-        return cls._tidy_df(df=network.generators_t.p, column_name="Asset")
+        # Note that all values are positive. For generators this means production, for loads it means consumption.
+        return cls._tidy_df(df=network.generators_t.p, column_name="Asset").abs()
 
     @classmethod
     def _tidy_df(cls, df: pd.DataFrame, column_name: Optional[str] = None) -> pd.DataFrame:
