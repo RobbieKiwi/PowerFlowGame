@@ -13,12 +13,16 @@ T = TypeVar("T")
 
 
 class RandomVariable:
-    """
-    The front door into the stats module
-    """
-
     def __init__(self, pdf: ProbabilityDistributionFunction) -> None:
         self._pdf = pdf
+
+    def __str__(self) -> str:
+        mean = float(np.format_float_positional(x=self.statistics.mean.value, precision=3, fractional=False))
+        var = float(np.format_float_positional(x=self.statistics.variance.value, precision=3, fractional=False))
+        return f"<{self.__class__.__name__}: {mean=}, {var=}>"
+
+    def __repr__(self) -> str:
+        return str(self)
 
     @property
     def pdf(self) -> ProbabilityDistributionFunction:
@@ -64,14 +68,6 @@ class RandomVariable:
         return RandomVariable(pdf=new_pdf)
 
     # TODO Add clip
-
-    def __str__(self) -> str:
-        mean = float(np.format_float_positional(x=self.statistics.mean.value, precision=3, fractional=False))
-        var = float(np.format_float_positional(x=self.statistics.variance.value, precision=3, fractional=False))
-        return f"<{self.__class__.__name__}: {mean=}, {var=}>"
-
-    def __repr__(self) -> str:
-        return str(self)
 
     def __add__(self, other: "RandomVariable") -> Self:
         # Assumes pdfs are not correlated
