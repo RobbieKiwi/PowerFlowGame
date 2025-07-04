@@ -21,9 +21,7 @@ def game_states_are_equal(game_state1: GameState, game_state2: GameState) -> boo
         for attribute, df in vars(game_state1.market_coupling_result).items():
             if not isinstance(df, pd.DataFrame):
                 raise NotImplementedError(f"Attribute {attribute} in MarketCouplingResult is not a DataFrame")
-            if not df.equals(
-                getattr(game_state2.market_coupling_result, attribute)
-            ):
+            if not df.equals(getattr(game_state2.market_coupling_result, attribute)):
                 return False
     return True
 

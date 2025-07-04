@@ -1,0 +1,119 @@
+from abc import ABC, abstractmethod
+from typing import Literal, TypeVar, Self
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.axes import Axes
+
+from src.models.stats.models import Statistics
+
+PdfPlotType = Literal["pdf", "cdf", "both"]
+
+
+class ProbabilityDistributionFunction(ABC):
+    @property
+    @abstractmethod
+    def statistics(self) -> Statistics: ...
+
+    @abstractmethod
+    def sample_numpy(self, n: int) -> np.ndarray: ...
+
+    @abstractmethod
+    def chance_that_rv_is_le(self, value: float) -> float: ...
+
+    @abstractmethod
+    def value_that_is_at_le_chance(self, chance: float) -> float: ...
+
+    @abstractmethod
+    def _get_plot_range(self) -> tuple[float, float]: ...
+
+    @abstractmethod
+    def plot_pdf_on_axis(self, ax: Axes) -> None: ...
+
+    @abstractmethod
+    def plot_cdf_on_axis(self, ax: Axes) -> None: ...
+
+    @abstractmethod
+    def scale_x(self, other: float) -> Self: ...
+
+    def __str__(self) -> str:
+        return f"<{self.__class__.__name__}(mean={self.mean}, variance={self.variance})>"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def plot(self, kind: PdfPlotType = "both") -> None:
+        v_lines = {self.mean: "red"}
+        if self.variance > 0:
+            v_lines[self.mean - self.std_dev] = "orange"
+            v_lines[self.mean + self.std_dev] = "orange"
+
+        def _plot(is_cumulative: bool, ax: Axes) -> None:
+            if is_cumulative:
+                self.plot_cdf_on_axis(ax)
+                ax.set_title("CDF")
+            else:
+                self.plot_pdf_on_axis(ax)
+                ax.set_title("PDF")
+            ax.set_xlabel('x')
+            ax.set_xlim(self._get_plot_range())
+            ax.set_ylabel('P(X<=x)' if is_cumulative else 'P(X=x)')
+            for k, v in v_lines.items():
+                ax.axvline(k, color=v, linestyle='--', linewidth=1)
+            ax.grid(True)
+
+        if kind == "both":
+            fig, axs = plt.subplots(2, 1, sharex="all", sharey="all")
+            _plot(is_cumulative=False, ax=axs[0])
+            _plot(is_cumulative=True, ax=axs[1])
+            for axis in axs:
+                axis.set_ylim(0, 1.1)
+        elif kind == "pdf":
+            fig, ax1 = plt.subplots()
+            _plot(is_cumulative=False, ax=ax1)
+            ax1.set_ylim(bottom=0)
+        elif kind == "cdf":
+            fig, ax1 = plt.subplots()
+            _plot(is_cumulative=True, ax=ax1)
+            ax1.set_ylim(0, 1.1)
+        else:
+            raise ValueError(f"Invalid kind: {kind}. Choose 'pdf', 'cdf', or 'both'.")
+
+        plt.tight_layout()
+        fig.set_size_inches(10, 6)
+        plt.show()
+
+    def _label_and_show(self, ax: Axes, kind: Literal["pdf", "cdf"]) -> None:
+        ax.set_xlabel('x')
+        ax.set_xlim(self._get_plot_range())
+        ax.set_ylabel('P(X=x)' if kind == 'pdf' else 'P(X<=x)')
+        ax.set_ylim(bottom=0)
+        ax.grid(True)
+        plt.show()
+
+    @property
+    def stats(self) -> Statistics:
+        return self.statistics
+
+    @property
+    def mean(self) -> float:
+        return self.stats.mean.value
+
+    @property
+    def variance(self) -> float:
+        return self.stats.variance.value
+
+    @property
+    def std_dev(self) -> float:
+        return self.stats.std_dev.value
+
+    @property
+    def min_value(self) -> float:
+        return self.stats.min_value.value
+
+    @property
+    def max_value(self) -> float:
+        return self.stats.max_value.value
+
+
+T_Pdf = TypeVar("T_Pdf", bound=ProbabilityDistributionFunction)
