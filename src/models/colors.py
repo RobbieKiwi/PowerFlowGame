@@ -1,8 +1,9 @@
 import colorsys
 from functools import cached_property
-from typing import Union, Literal
+from typing import Union, Literal, Self
 
 import numpy as np
+from matplotlib import colormaps
 
 
 class Color:
@@ -119,9 +120,26 @@ class Color:
         # A number between 0 and 1, where 0 is black and 1 is white.
         return self.hls[1] / Color("white").hls[1]
 
+    def to_string(self) -> str:
+        return self.rgb_hex_str
+
+    @classmethod
+    def from_string(cls, s: str) -> Self:
+        return cls(x=s, color_model="rgb")
+
 
 def get_contrasting_color(color: Color) -> Color:
     if color.brightness_factor < 0.5:
         return Color("#FFFFFF")
     else:
         return Color("#000000")
+
+
+def get_random_player_colors(n: int) -> list[Color]:
+    color_map = colormaps.get_cmap('hsv')
+    colors_np = [color_map(i / n) for i in range(n)]
+
+    def convert_color(color: tuple[float, float, float, float]) -> Color:
+        return Color(x=(round(color[0] * 255), int(color[1] * 255), int(color[2] * 255)), color_model="rgb")
+
+    return [convert_color(color) for color in colors_np]

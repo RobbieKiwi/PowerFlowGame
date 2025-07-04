@@ -2,6 +2,7 @@ from typing import Callable
 from unittest import TestCase
 
 from src.engine.engine import Engine
+from src.models.colors import Color
 from src.models.ids import PlayerId, AssetId
 from src.models.message import PlayerToGameMessage, BuyAssetRequest, BuyAssetResponse
 from src.models.player import Player
@@ -23,7 +24,9 @@ class TestAssets(TestCase):
 
     def test_update_bid_message(self) -> None:
         player_repo = PlayerRepoMaker.make_quick()
-        rich_player = Player(id=PlayerId(100), name="Rich player", color="#000000", money=1000000, is_having_turn=True)
+        rich_player = Player(
+            id=PlayerId(100), name="Rich player", color=Color("black"), money=1000000, is_having_turn=True
+        )
         player_repo += rich_player
         game_state = GameStateMaker().add_player_repo(player_repo).make()
 
