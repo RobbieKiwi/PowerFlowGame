@@ -49,14 +49,13 @@ class PdfConvolver:
         assert isinstance(pdf_a, ProbabilityDistributionFunction)
         assert isinstance(dirac, DiracDeltaDistributionFunction)
 
+        # TODO move this to the PDFs themselves as a method like _add_offset to make sure it works for all PDFs
         if isinstance(pdf_a, NormalDistributionFunction):
             new_mean = pdf_a.mean + dirac.mean
             return NormalDistributionFunction(mean=new_mean, std_dev=pdf_a.std_dev)
         if isinstance(pdf_a, UniformDistributionFunction):
             new_values = (pdf_a.min_value + dirac.mean, pdf_a.max_value + dirac.mean)
-            new_low = min(new_values)
-            new_high = max(new_values)
-            return UniformDistributionFunction(low=new_low, high=new_high)
+            return UniformDistributionFunction.from_unsorted(new_values)
         if isinstance(pdf_a, DiracDeltaDistributionFunction):
             new_mean = pdf_a.mean + dirac.mean
             return DiracDeltaDistributionFunction(value=new_mean)
