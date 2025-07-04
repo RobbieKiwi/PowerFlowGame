@@ -121,7 +121,7 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
         saturation = np.random.randint(200, 255)
         value = 200
 
-        color = Color(x=(hue, saturation, value), color_model="hsv").rgb_hex_str
+        color = Color(x=(hue, saturation, value), color_model="hsv")
         return Player(
             id=PlayerId(player_id),
             name=f"Player {player_id}",
@@ -137,7 +137,9 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
         # Ensure that there is exactly one bus per non-npc player
         player_ids = [dc.id for dc in self.dcs]
         if PlayerId.get_npc() not in player_ids:
-            self.dcs.append(Player(id=PlayerId.get_npc(), name="NPC", color="#000000", money=0.0, is_having_turn=False))
+            self.dcs.append(
+                Player(id=PlayerId.get_npc(), name="NPC", color=Color("black"), money=0.0, is_having_turn=False)
+            )
 
 
 class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):

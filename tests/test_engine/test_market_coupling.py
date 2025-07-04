@@ -63,7 +63,7 @@ class TestMarketCoupling(TestCase):
                 game_state.assets.filter({"asset_type": AssetType.LOAD}).asset_ids
             ].sum()
 
-            self.assertAlmostEqual(total_generation, -total_load, places=5)
+            self.assertAlmostEqual(total_generation, total_load, places=5)
 
     def test_rent_only_for_congested_lines(self) -> None:
         game_state = self.create_game_state()

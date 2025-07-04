@@ -83,7 +83,7 @@ class PlotBus(PlotObject):
 
     @property
     def color(self) -> Color:
-        return self.owner.color_obj
+        return self.owner.color
 
     @property
     def data_dict(self) -> dict[str, str]:

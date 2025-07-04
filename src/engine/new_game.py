@@ -1,19 +1,19 @@
+import math
+from abc import ABC, abstractmethod
 from itertools import combinations
 from typing import Optional
-from abc import ABC, abstractmethod
-import math
-import numpy as np
 
-from matplotlib import cm
+import numpy as np
 
 from src.models.assets import AssetRepo, AssetInfo, AssetId, AssetType
 from src.models.buses import BusRepo, Bus
+from src.models.colors import Color, get_random_player_colors
 from src.models.game_settings import GameSettings
 from src.models.game_state import GameState, Phase
+from src.models.geometry import Point, Geometry
 from src.models.ids import GameId, PlayerId, BusId
 from src.models.player import Player, PlayerRepo
 from src.models.transmission import TransmissionRepo, TransmissionInfo, TransmissionId
-from src.models.geometry import Point, Geometry
 
 
 class BusTopologyMaker:
@@ -193,9 +193,7 @@ class BaseGameInitializer(ABC):
         ), "Number of player names and colors must match the number of players defined in game settings."
 
         if player_colors is None:
-            color_map = cm.get_cmap('hsv', self.settings.n_players)
-            player_colors = [color_map(i / self.settings.n_players)[:3] for i in range(self.settings.n_players)]
-            player_colors = [f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}" for r, g, b in player_colors]
+            player_colors = get_random_player_colors(self.settings.n_players)
 
         player_repo = self._create_player_repo(names=player_names, colors=player_colors)
         bus_repo = self._create_bus_repo(player_repo=player_repo)
@@ -217,13 +215,7 @@ class BaseGameInitializer(ABC):
         )
         return new_game
 
-    def _create_player_repo(self, names: list[str], colors: list[str]) -> PlayerRepo:
-        """
-        Create a PlayerRepo with the given player names and colors.
-        :param names: List of player names.
-        :param colors: List of player colors.
-        :return: A PlayerRepo instance with the initialized players.
-        """
+    def _create_player_repo(self, names: list[str], colors: list[Color]) -> PlayerRepo:
         assert (
             len(names) == len(colors) == self.settings.n_players
         ), "Number of names and colors must match the number of players."
