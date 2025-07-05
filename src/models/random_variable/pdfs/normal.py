@@ -5,15 +5,19 @@ import numpy as np
 from matplotlib.axes import Axes
 from scipy.stats import norm
 
-from src.models.stats.models import Statistics, Uncertainty
-from src.models.stats.pdfs import DiracDeltaDistributionFunction
-from src.models.stats.pdfs.base import ProbabilityDistributionFunction
+from src.models.random_variable.models import Statistics, Uncertainty
+from src.models.random_variable.pdfs import DiracDeltaDistributionFunction
+from src.models.random_variable.pdfs.base import ProbabilityDistributionFunction
 
 
 class NormalDistributionFunction(ProbabilityDistributionFunction):
     def __init__(self, mean: float, std_dev: float) -> None:
         self._mean = mean
         self._std_dev = std_dev
+
+    @classmethod
+    def get_short_name(cls) -> str:
+        return "normal"
 
     @cached_property
     def statistics(self) -> Statistics:
@@ -29,6 +33,9 @@ class NormalDistributionFunction(ProbabilityDistributionFunction):
         if other == 0.0:
             return DiracDeltaDistributionFunction(value=0.0)
         return NormalDistributionFunction(mean=self._mean * other, std_dev=self._std_dev * abs(other))
+
+    def add_x_offset(self, x: float) -> Self:
+        return NormalDistributionFunction(mean=self._mean + float(x), std_dev=self._std_dev)
 
     def sample_numpy(self, n: int) -> np.ndarray:
         return np.random.normal(loc=self._mean, scale=self._std_dev, size=n)

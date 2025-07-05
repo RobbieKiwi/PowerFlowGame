@@ -6,18 +6,22 @@ import pandas as pd
 from matplotlib.axes import Axes
 from scipy.stats import gaussian_kde
 
-from src.models.stats.models import Statistics, Uncertainty
-from src.models.stats.pdfs import DiracDeltaDistributionFunction
-from src.models.stats.pdfs.base import ProbabilityDistributionFunction
+from src.models.random_variable.models import Statistics, Uncertainty, certainly
+from src.models.random_variable.pdfs import DiracDeltaDistributionFunction
+from src.models.random_variable.pdfs.base import ProbabilityDistributionFunction
 
 
-class EmpiricalDistributionFunction(ProbabilityDistributionFunction):
+class AnonymousDistributionFunction(ProbabilityDistributionFunction):
     def __init__(
         self, sampler: Callable[[int], np.ndarray], n_samples: int = 10000, statistics: Optional[Statistics] = None
     ) -> None:
         self._sampler = sampler
         self._n_samples = n_samples
         self._external_statistics = statistics
+
+    @classmethod
+    def get_short_name(cls) -> str:
+        return "anon"
 
     @cached_property
     def statistics(self) -> Statistics:
@@ -49,7 +53,22 @@ class EmpiricalDistributionFunction(ProbabilityDistributionFunction):
             samples = self._sampler(n)
             return samples * other
 
-        return EmpiricalDistributionFunction(sampler=sampler, n_samples=self._n_samples, statistics=statistics)
+        return AnonymousDistributionFunction(sampler=sampler, n_samples=self._n_samples, statistics=statistics)
+
+    def add_x_offset(self, x: float) -> Self:
+        certain_x = certainly(float(x))
+        statistics = Statistics(
+            mean=self.stats.mean + certain_x,
+            variance=self.stats.variance,
+            min_value=self.stats.min_value + certain_x,
+            max_value=self.stats.max_value + certain_x,
+        )
+
+        def sampler(n: int) -> np.ndarray:
+            samples = self._sampler(n)
+            return samples + x
+
+        return AnonymousDistributionFunction(sampler=sampler, n_samples=self._n_samples, statistics=statistics)
 
     def sample_numpy(self, n: int) -> np.ndarray:
         return self._sampler(n)

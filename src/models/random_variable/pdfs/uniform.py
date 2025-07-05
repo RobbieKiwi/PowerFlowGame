@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 
-from src.models.stats.models import Statistics, Uncertainty
-from src.models.stats.pdfs import DiracDeltaDistributionFunction
-from src.models.stats.pdfs.base import ProbabilityDistributionFunction
+from src.models.random_variable.models import Statistics, Uncertainty
+from src.models.random_variable.pdfs import DiracDeltaDistributionFunction
+from src.models.random_variable.pdfs.base import ProbabilityDistributionFunction
 
 
 class UniformDistributionFunction(ProbabilityDistributionFunction):
@@ -15,6 +15,10 @@ class UniformDistributionFunction(ProbabilityDistributionFunction):
         assert high >= low, "High value must be greater than or equal to low value."
         self._low = low
         self._high = high
+
+    @classmethod
+    def get_short_name(cls) -> str:
+        return "uniform"
 
     @cached_property
     def statistics(self) -> Statistics:
@@ -30,6 +34,9 @@ class UniformDistributionFunction(ProbabilityDistributionFunction):
         if other == 0.0:
             return DiracDeltaDistributionFunction(value=0.0)
         return UniformDistributionFunction.from_unsorted(values=(self.min_value * other, self.max_value * other))
+
+    def add_x_offset(self, x: float) -> Self:
+        return UniformDistributionFunction(low=self._low + float(x), high=self._high + float(x))
 
     def sample_numpy(self, n: int) -> np.ndarray:
         return np.random.uniform(low=self._low, high=self._high, size=n)

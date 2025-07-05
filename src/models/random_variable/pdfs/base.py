@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-from src.models.stats.models import Statistics
+from src.models.random_variable.models import Statistics
 
 PdfPlotType = Literal["pdf", "cdf", "both"]
 
 
 class ProbabilityDistributionFunction(ABC):
+    @classmethod
+    @abstractmethod
+    def get_short_name(cls) -> str: ...
+
     @property
     @abstractmethod
     def statistics(self) -> Statistics: ...
@@ -25,9 +29,6 @@ class ProbabilityDistributionFunction(ABC):
     def value_that_is_at_le_chance(self, chance: float) -> float: ...
 
     @abstractmethod
-    def _get_plot_range(self) -> tuple[float, float]: ...
-
-    @abstractmethod
     def plot_pdf_on_axis(self, ax: Axes) -> None: ...
 
     @abstractmethod
@@ -35,6 +36,12 @@ class ProbabilityDistributionFunction(ABC):
 
     @abstractmethod
     def scale_x(self, other: float) -> Self: ...
+
+    @abstractmethod
+    def add_x_offset(self, x: float) -> Self: ...
+
+    @abstractmethod
+    def _get_plot_range(self) -> tuple[float, float]: ...
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__}(mean={self.mean}, variance={self.variance})>"
@@ -63,11 +70,11 @@ class ProbabilityDistributionFunction(ABC):
             ax.grid(True)
 
         if kind == "both":
-            fig, axs = plt.subplots(2, 1, sharex="all", sharey="all")
+            fig, axs = plt.subplots(2, 1, sharex="all")
             _plot(is_cumulative=False, ax=axs[0])
             _plot(is_cumulative=True, ax=axs[1])
-            for axis in axs:
-                axis.set_ylim(0, 1.1)
+            axs[0].set_ylim(0, None)
+            axs[1].set_ylim(0, 1.1)
         elif kind == "pdf":
             fig, ax1 = plt.subplots()
             _plot(is_cumulative=False, ax=ax1)
@@ -81,14 +88,6 @@ class ProbabilityDistributionFunction(ABC):
 
         plt.tight_layout()
         fig.set_size_inches(10, 6)
-        plt.show()
-
-    def _label_and_show(self, ax: Axes, kind: Literal["pdf", "cdf"]) -> None:
-        ax.set_xlabel('x')
-        ax.set_xlim(self._get_plot_range())
-        ax.set_ylabel('P(X=x)' if kind == 'pdf' else 'P(X<=x)')
-        ax.set_ylim(bottom=0)
-        ax.grid(True)
         plt.show()
 
     @property

@@ -2,7 +2,8 @@ from unittest import TestCase
 
 import numpy as np
 
-from src.models.stats import RandomVariable
+from src.models.random_variable import RandomVariable, DiscreteDistributionFunction
+from src.models.random_variable.constructors import make_normal, make_uniform, make_dirac, make_anon, make_discrete
 
 
 class TestRandomVariable(TestCase):
@@ -10,7 +11,7 @@ class TestRandomVariable(TestCase):
         mean = 23.4
         std_dev = 2.1
 
-        rv = RandomVariable.make_normal(mean=mean, std_dev=std_dev)
+        rv = make_normal(mean=mean, std_dev=std_dev)
 
         sample = rv.sample_one()
         self.assertIsInstance(sample, float)
@@ -25,7 +26,7 @@ class TestRandomVariable(TestCase):
         low = 10.0
         high = 20.0
 
-        rv = RandomVariable.make_uniform(low=low, high=high)
+        rv = make_uniform(low=low, high=high)
 
         sample = rv.sample_one()
         self.assertIsInstance(sample, float)
@@ -45,7 +46,7 @@ class TestRandomVariable(TestCase):
     def test_dirac_delta_rv(self) -> None:
         value = 42.0
 
-        rv = RandomVariable.make_dirac(value=value)
+        rv = make_dirac(value=value)
 
         sample = rv.sample_one()
         self.assertEqual(sample, value)
@@ -56,10 +57,27 @@ class TestRandomVariable(TestCase):
         self.assertEqual(rv.get_chance_that_rv_is_le(value=value, exact=True), 1.0)
         self.assertEqual(rv.get_chance_that_rv_is_le(value=value + 1e-9, exact=True), 1.0)
 
+    def test_discrete_rv(self) -> None:
+        values = [1, 2, 3]
+        probabilities = [0.2, 0.5, 0.3]
+
+        rv = make_discrete(values=values, probabilities=probabilities)
+
+        sample = rv.sample_numpy(n=100)
+        self.assertIsInstance(sample, np.ndarray)
+        self.assertEqual(sample.shape, (100,))
+        self.assertTrue(np.all(np.isin(sample, values)))
+
+        self.assertEqual(rv.get_mean(exact=True), sum(v * p for v, p in zip(values, probabilities)))
+        self.assertAlmostEqual(
+            rv.get_variance(exact=True),
+            sum(p * (v - rv.get_mean(exact=True)) ** 2 for v, p in zip(values, probabilities)),
+        )
+
     def test_empirical_rv(self) -> None:
         mean = 23.4
 
-        rv = RandomVariable.make_empirical(sampler=lambda n: np.ones(n) * mean)
+        rv = make_anon(sampler=lambda n: np.ones(n) * mean)
 
         sample = rv.sample_one()
         self.assertEqual(sample, mean)
@@ -74,9 +92,9 @@ class TestRandomVariable(TestCase):
         self.assertRaises(NotImplementedError, lambda: rv.get_variance(exact=True))
 
     def test_combining_different_types_of_rvs(self) -> None:
-        rv1 = RandomVariable.make_normal(mean=10, std_dev=2)
-        rv2 = RandomVariable.make_uniform(low=80, high=120)
-        rv3 = RandomVariable.make_empirical(sampler=lambda n: np.ones(n) * 15.0)
+        rv1 = make_normal(mean=10, std_dev=2)
+        rv2 = make_uniform(low=80, high=120)
+        rv3 = make_anon(sampler=lambda n: np.ones(n) * 15.0)
 
         partial_combined_rv = rv1 + rv2
         self.assertIsInstance(partial_combined_rv, RandomVariable)
@@ -93,16 +111,16 @@ class TestRandomVariable(TestCase):
         self.assertRaises(NotImplementedError, lambda: rv3.get_variance(exact=True))
 
     def test_pdf_combination(self) -> None:
-        rv1 = RandomVariable.make_uniform(low=0, high=10)
-        rv2 = RandomVariable.make_dirac(value=10)
+        rv1 = make_uniform(low=0, high=10)
+        rv2 = make_dirac(value=10)
         combined = rv1 + rv2
         self.assertEqual(combined.get_chance_that_rv_is_le(value=10), 0.0)
         self.assertEqual(combined.get_chance_that_rv_is_le(value=20), 1.0)
 
     def test_normal_known_convolutions(self) -> None:
-        rv1 = RandomVariable.make_normal(mean=1, std_dev=4)
-        rv2 = RandomVariable.make_normal(mean=2, std_dev=1)
-        dirac1 = RandomVariable.make_dirac(value=1)
+        rv1 = make_normal(mean=1, std_dev=4)
+        rv2 = make_normal(mean=2, std_dev=1)
+        dirac1 = make_dirac(value=1)
         combined = rv1 + rv2
 
         self.assertIsInstance(combined, RandomVariable)
@@ -115,8 +133,8 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(offset.get_variance(exact=True), 17)
 
     def test_normal_arithmetic(self) -> None:
-        rv1 = RandomVariable.make_normal(mean=5, std_dev=1)
-        rv2 = RandomVariable.make_normal(mean=3, std_dev=1)
+        rv1 = make_normal(mean=5, std_dev=1)
+        rv2 = make_normal(mean=3, std_dev=1)
 
         # Test addition
         rv_add = rv1 + rv2
@@ -142,7 +160,7 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(rv_div.get_mean(), 5 / 2)
         self.assertAlmostEqual(rv_div.get_variance(), rv1.get_variance() / 4)
 
-        rv3 = RandomVariable.make_empirical(sampler=lambda n: np.ones(n) * 15.0)
+        rv3 = make_anon(sampler=lambda n: np.ones(n) * 15.0)
 
         rv3_double = rv3 * 2
         self.assertIsInstance(rv3_double, RandomVariable)
@@ -150,8 +168,8 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(rv3_double.get_variance(), 0.0)
 
     def test_uniform_known_convolutions(self) -> None:
-        rv1 = RandomVariable.make_uniform(low=0, high=10)
-        dirac1 = RandomVariable.make_dirac(value=1)
+        rv1 = make_uniform(low=0, high=10)
+        dirac1 = make_dirac(value=1)
         offset = rv1 + dirac1
 
         self.assertIsInstance(offset, RandomVariable)
@@ -159,7 +177,7 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(offset.get_variance(exact=True), rv1.get_variance())
 
     def test_uniform_multiplications(self) -> None:
-        rv1 = RandomVariable.make_uniform(low=0, high=10)
+        rv1 = make_uniform(low=0, high=10)
 
         double_rv1 = rv1 * 2
         self.assertIsInstance(double_rv1, RandomVariable)
@@ -171,12 +189,34 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(negative_rv1.get_mean(exact=True), -5)
         self.assertAlmostEqual(negative_rv1.get_variance(exact=True), rv1.get_variance())
 
+    def test_discrete_convolution(self) -> None:
+        dice = make_discrete(values=[1, 2, 3, 4, 5, 6])
+        two_dice = dice + dice
+        self.assertIsInstance(two_dice, RandomVariable)
+        self.assertIsInstance(two_dice.pdf, DiscreteDistributionFunction)
+        self.assertAlmostEqual(two_dice.get_mean(exact=True), 7.0)
+
+        one = make_dirac(value=1)
+        two_dice_and_one = dice * 2 + one
+        self.assertIsInstance(two_dice_and_one, RandomVariable)
+        self.assertIsInstance(two_dice_and_one.pdf, DiscreteDistributionFunction)
+        self.assertAlmostEqual(two_dice_and_one.get_mean(exact=True), 8.0)
+
     def test_plotting(self) -> None:
-        rv1 = RandomVariable.make_normal(mean=0, std_dev=1)
-        rv2 = RandomVariable.make_uniform(low=-1, high=1)
+        rv1 = make_normal(mean=0, std_dev=1)
+        rv2 = make_uniform(low=-1, high=1)
         combined = rv1 + rv2
 
-        # Test plotting
         rv1.pdf.plot()
         rv2.pdf.plot()
         combined.pdf.plot()
+
+        discrete = make_discrete(values=[1, 2, 3])
+        discrete.pdf.plot()
+
+    def test_add_special_event(self) -> None:
+        rv = make_dirac(value=1.0)
+        new_rv = rv.add_special_event(value=2.0, chance=0.5)
+
+        self.assertIsInstance(new_rv, RandomVariable)
+        self.assertAlmostEqual(new_rv.get_mean(), 1.5)

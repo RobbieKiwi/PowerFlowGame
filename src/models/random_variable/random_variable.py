@@ -2,9 +2,9 @@ from typing import TypeVar, Self, Callable
 
 import numpy as np
 
-from src.models.stats.models import Statistics
-from src.models.stats.pdf_combiner import PdfCombiner
-from src.models.stats.pdf_convolver import PdfConvolver
+from src.models.random_variable.models import Statistics
+from src.models.random_variable.pdf_combiner import PdfCombiner
+from src.models.random_variable.pdf_convolver import PdfConvolver
 from .pdfs import *
 
 __all__ = ["RandomVariable"]
@@ -19,7 +19,8 @@ class RandomVariable:
     def __str__(self) -> str:
         mean = float(np.format_float_positional(x=self.statistics.mean.value, precision=3, fractional=False))
         var = float(np.format_float_positional(x=self.statistics.variance.value, precision=3, fractional=False))
-        return f"<{self.__class__.__name__}: {mean=}, {var=}>"
+        name = self.pdf.get_short_name()
+        return f"<{self.__class__.__name__}({name}): {mean=}, {var=}>"
 
     def __repr__(self) -> str:
         return str(self)
@@ -45,13 +46,17 @@ class RandomVariable:
         return self.pdf.statistics.get(name="max_value", certain=exact)
 
     def get_chance_that_rv_is_le(self, value: float, exact: bool = False) -> float:
-        if exact and isinstance(self.pdf, EmpiricalDistributionFunction):
-            raise ValueError("Exact CDF calculation is not supported for empirical distributions.")
+        if exact and isinstance(self.pdf, AnonymousDistributionFunction):
+            # TODO Move this certainty logic inside the pdf subclasses
+            name = AnonymousDistributionFunction.get_short_name()
+            raise ValueError(f"Exact CDF calculation is not supported for {name} distributions.")
         return self.pdf.chance_that_rv_is_le(value=value)
 
     def get_value_that_is_at_le_chance(self, chance: float, exact: bool = False) -> float:
-        if exact and isinstance(self.pdf, EmpiricalDistributionFunction):
-            raise ValueError("Exact quantile calculation is not supported for empirical distributions.")
+        if exact and isinstance(self.pdf, AnonymousDistributionFunction):
+            # TODO Move this certainty logic inside the pdf subclasses
+            name = AnonymousDistributionFunction.get_short_name()
+            raise ValueError(f"Exact quantile calculation is not supported for {name} distributions.")
         assert 0.0 <= chance <= 1.0, "Chance must be between 0 and 1."
         return self.pdf.value_that_is_at_le_chance(chance=chance)
 
@@ -64,7 +69,7 @@ class RandomVariable:
     def add_special_event(self, value: float, chance: float) -> Self:
         assert 0 <= chance <= 1.0, "Value must be between 0 and 1"
         dirac_function = DiracDeltaDistributionFunction(value=value)
-        new_pdf = PdfCombiner.combine_pdfs(pdfs=[self.pdf, dirac_function], chances=[1.0 - chance, chance])
+        new_pdf = PdfCombiner.combine_pdfs(pdfs=[self.pdf, dirac_function], probabilities=[1.0 - chance, chance])
         return RandomVariable(pdf=new_pdf)
 
     # TODO Add clip
@@ -90,19 +95,3 @@ class RandomVariable:
 
     def __truediv__(self, factor: float) -> Self:
         return self.__mul__(1.0 / factor)
-
-    @classmethod
-    def make_dirac(cls, value: float) -> Self:
-        return cls(pdf=DiracDeltaDistributionFunction(value=value))
-
-    @classmethod
-    def make_empirical(cls, sampler: Callable[[int], np.ndarray]) -> Self:
-        return cls(pdf=EmpiricalDistributionFunction(sampler=sampler))
-
-    @classmethod
-    def make_normal(cls, mean: float, std_dev: float) -> Self:
-        return cls(pdf=NormalDistributionFunction(mean=mean, std_dev=std_dev))
-
-    @classmethod
-    def make_uniform(cls, low: float, high: float) -> Self:
-        return cls(pdf=UniformDistributionFunction(low=low, high=high))

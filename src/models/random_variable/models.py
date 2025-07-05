@@ -38,6 +38,14 @@ class Uncertainty(Generic[T]):
         return Uncertainty(value=func(self.value, other.value), is_certain=self.is_certain and other.is_certain)
 
 
+def certainly(x: T) -> Uncertainty[T]:
+    return Uncertainty(value=x, is_certain=True)
+
+
+def maybe(x: T) -> Uncertainty[T]:
+    return Uncertainty(value=x, is_certain=False)
+
+
 def sum_uncertain_floats(uncertainties: Iterable[Uncertainty[float]]) -> Uncertainty[float]:
     return sum(uncertainties, start=Uncertainty(value=0.0, is_certain=True))
 
