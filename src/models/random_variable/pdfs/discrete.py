@@ -112,7 +112,7 @@ class DiracDeltaDistributionFunction(DiscreteDistributionFunction):
         return float(self._values[0])
 
     def scale(self, x: float) -> Self:
-        return DiracDeltaDistributionFunction(value=self.mean * other)
+        return DiracDeltaDistributionFunction(value=self.mean * x)
 
     def sample_numpy(self, n: int) -> np.ndarray:
         return np.ones(n) * self.value
