@@ -6,7 +6,7 @@ import pandas as pd
 from matplotlib.axes import Axes
 from scipy.stats import gaussian_kde
 
-from src.models.random_variable.models import Statistics, Uncertainty, certainly
+from src.models.random_variable.models import Statistics, Uncertainty, certainly, sort_uncertainties
 from src.models.random_variable.pdfs import DiracDeltaDistributionFunction
 from src.models.random_variable.pdfs.base import ProbabilityDistributionFunction
 
@@ -34,28 +34,28 @@ class AnonymousDistributionFunction(ProbabilityDistributionFunction):
             max_value=Uncertainty(value=float(self._sorted_samples[1]), is_certain=False),
         )
 
-    def scale_x(self, other: float) -> Self:
-        other = float(other)
-        if other == 0.0:
+    def scale(self, x: float) -> Self:
+        x = float(x)
+        if x == 0.0:
             return DiracDeltaDistributionFunction(value=0.0)
 
-        new_min_max = (self.stats.min_value * other, self.stats.max_value * other)
-        new_min, new_max = sorted(new_min_max, key=lambda x: x.value)
+        new_min_max = (self.stats.min_value * x, self.stats.max_value * x)
+        new_min, new_max = sort_uncertainties(new_min_max)
 
         statistics = Statistics(
-            mean=self.stats.mean * other,
-            variance=self.stats.variance * (other**2),
+            mean=self.stats.mean * x,
+            variance=self.stats.variance * (x**2),
             min_value=new_min,
             max_value=new_max,
         )
 
         def sampler(n: int) -> np.ndarray:
             samples = self._sampler(n)
-            return samples * other
+            return samples * x
 
         return AnonymousDistributionFunction(sampler=sampler, n_samples=self._n_samples, statistics=statistics)
 
-    def add_x_offset(self, x: float) -> Self:
+    def add_constant(self, x: float) -> Self:
         certain_x = certainly(float(x))
         statistics = Statistics(
             mean=self.stats.mean + certain_x,
@@ -108,9 +108,9 @@ class AnonymousDistributionFunction(ProbabilityDistributionFunction):
 
         min_value = self.min_value
         max_value = self.max_value
-        range_span = max_value - min_value
-        start = min_value - 0.1 * range_span
-        end = max_value + 0.1 * range_span
+        low_high_range = max_value - min_value
+        start = min_value - 0.1 * low_high_range
+        end = max_value + 0.1 * low_high_range
         return start, end
 
     def plot_pdf_on_axis(self, ax: Axes) -> None:

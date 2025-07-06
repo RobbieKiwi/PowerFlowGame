@@ -27,6 +27,12 @@ class Uncertainty(Generic[T]):
     def __add__(self, other: "Uncertainty[T] " | T) -> "Uncertainty[T]":
         return self._combine(other=other, func=lambda x, y: x + y)
 
+    def __sub__(self, other: "Uncertainty[T] | T") -> "Uncertainty[T]":
+        return self._combine(other=other, func=lambda x, y: x - y)
+
+    def apply(self, func: Callable[[T], T]) -> "Uncertainty[T]":
+        return Uncertainty(value=func(self.value), is_certain=self.is_certain)
+
     def get(self, name: str = "value", certain: bool = False) -> T:
         if certain and not self.is_certain:
             raise NotImplementedError(f"{name} is uncertain")
@@ -48,6 +54,10 @@ def maybe(x: T) -> Uncertainty[T]:
 
 def sum_uncertain_floats(uncertainties: Iterable[Uncertainty[float]]) -> Uncertainty[float]:
     return sum(uncertainties, start=Uncertainty(value=0.0, is_certain=True))
+
+
+def sort_uncertainties(uncertainties: Iterable[Uncertainty[float]]) -> list[Uncertainty[float]]:
+    return sorted(uncertainties, key=lambda x: x.value)
 
 
 @dataclass(frozen=True)
@@ -72,3 +82,7 @@ class Statistics:
     @cached_property
     def std_dev(self) -> Uncertainty[float]:
         return Uncertainty(value=self.variance.value**0.5, is_certain=self.variance.is_certain)
+
+    @cached_property
+    def expectation_of_x_squared(self) -> Uncertainty[float]:
+        return self.mean.apply(lambda x: x**2) + self.variance.apply(lambda x: x**2)

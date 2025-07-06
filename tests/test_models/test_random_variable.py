@@ -2,7 +2,12 @@ from unittest import TestCase
 
 import numpy as np
 
-from src.models.random_variable import RandomVariable, DiscreteDistributionFunction
+from src.models.random_variable import (
+    RandomVariable,
+    DiscreteDistributionFunction,
+    DiracDeltaDistributionFunction,
+    MixtureDistributionFunction,
+)
 from src.models.random_variable.constructors import make_normal, make_uniform, make_dirac, make_anon, make_discrete
 
 
@@ -68,7 +73,7 @@ class TestRandomVariable(TestCase):
         self.assertEqual(sample.shape, (100,))
         self.assertTrue(np.all(np.isin(sample, values)))
 
-        self.assertEqual(rv.get_mean(exact=True), sum(v * p for v, p in zip(values, probabilities)))
+        self.assertAlmostEqual(rv.get_mean(exact=True), sum(v * p for v, p in zip(values, probabilities)))
         self.assertAlmostEqual(
             rv.get_variance(exact=True),
             sum(p * (v - rv.get_mean(exact=True)) ** 2 for v, p in zip(values, probabilities)),
@@ -90,6 +95,16 @@ class TestRandomVariable(TestCase):
 
         self.assertRaises(NotImplementedError, lambda: rv.get_mean(exact=True))
         self.assertRaises(NotImplementedError, lambda: rv.get_variance(exact=True))
+
+    def test_mixture_rv(self) -> None:
+        rv_a = make_dirac(1.0)
+        rv_b = make_normal(mean=2.0, std_dev=2.0)
+        mixture = RandomVariable.mix_rvs([rv_a, rv_b])
+
+        self.assertIsInstance(mixture, RandomVariable)
+        self.assertIsInstance(mixture.pdf, MixtureDistributionFunction)
+        self.assertAlmostEqual(mixture.get_mean(exact=True), (1.0 + 2.0) / 2)
+        # TODO Test variance of mixture, test using different weights
 
     def test_combining_different_types_of_rvs(self) -> None:
         rv1 = make_normal(mean=10, std_dev=2)
@@ -167,6 +182,13 @@ class TestRandomVariable(TestCase):
         self.assertAlmostEqual(rv3_double.get_mean(), 30.0)
         self.assertAlmostEqual(rv3_double.get_variance(), 0.0)
 
+        # Test scale by zero
+        rv_zero_scale = rv1 * 0
+        self.assertIsInstance(rv_zero_scale, RandomVariable)
+        self.assertAlmostEqual(rv_zero_scale.get_mean(), 0.0)
+        self.assertAlmostEqual(rv_zero_scale.get_variance(), 0.0)
+        self.assertIsInstance(rv_zero_scale.pdf, DiracDeltaDistributionFunction)
+
     def test_uniform_known_convolutions(self) -> None:
         rv1 = make_uniform(low=0, high=10)
         dirac1 = make_dirac(value=1)
@@ -213,6 +235,9 @@ class TestRandomVariable(TestCase):
 
         discrete = make_discrete(values=[1, 2, 3])
         discrete.pdf.plot()
+
+        mixed = RandomVariable.mix_rvs([rv1, rv2, combined, discrete])
+        mixed.pdf.plot()
 
     def test_add_special_event(self) -> None:
         rv = make_dirac(value=1.0)

@@ -29,13 +29,13 @@ class UniformDistributionFunction(ProbabilityDistributionFunction):
             max_value=Uncertainty(value=self._high, is_certain=True),
         )
 
-    def scale_x(self, other: float) -> Self:
-        other = float(other)
-        if other == 0.0:
+    def scale(self, x: float) -> Self | DiracDeltaDistributionFunction:
+        x = float(x)
+        if x == 0.0:
             return DiracDeltaDistributionFunction(value=0.0)
-        return UniformDistributionFunction.from_unsorted(values=(self.min_value * other, self.max_value * other))
+        return UniformDistributionFunction.from_unsorted(values=(self.min_value * x, self.max_value * x))
 
-    def add_x_offset(self, x: float) -> Self:
+    def add_constant(self, x: float) -> Self:
         return UniformDistributionFunction(low=self._low + float(x), high=self._high + float(x))
 
     def sample_numpy(self, n: int) -> np.ndarray:

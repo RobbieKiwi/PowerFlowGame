@@ -1,13 +1,14 @@
-from typing import TypeVar, Self, Callable
+from typing import TypeVar, Self, Union, Optional
 
 import numpy as np
 
 from src.models.random_variable.models import Statistics
-from src.models.random_variable.pdf_combiner import PdfCombiner
 from src.models.random_variable.pdf_convolver import PdfConvolver
 from .pdfs import *
 
 __all__ = ["RandomVariable"]
+
+from .pdfs.mixture import MixtureDistributionFunction
 
 T = TypeVar("T")
 
@@ -68,26 +69,28 @@ class RandomVariable:
 
     def add_special_event(self, value: float, chance: float) -> Self:
         assert 0 <= chance <= 1.0, "Value must be between 0 and 1"
-        dirac_function = DiracDeltaDistributionFunction(value=value)
-        new_pdf = PdfCombiner.combine_pdfs(pdfs=[self.pdf, dirac_function], probabilities=[1.0 - chance, chance])
-        return RandomVariable(pdf=new_pdf)
+        dirac_rv = RandomVariable(DiracDeltaDistributionFunction(value=value))
+        return self.mix_rvs(rvs=[self, dirac_rv], probabilities=[1.0 - chance, chance])
 
     # TODO Add clip
 
-    def __add__(self, other: "RandomVariable") -> Self:
+    def __add__(self, other: Union["RandomVariable", float]) -> Self:
         # Assumes pdfs are not correlated
-        assert isinstance(other, RandomVariable)
-        new_pdf = PdfConvolver.convolve_pdfs(pdfs=[self.pdf, other.pdf])
+        if not isinstance(other, RandomVariable):
+            pdf = DiracDeltaDistributionFunction(value=float(other))
+        else:
+            pdf = other.pdf
+        new_pdf = PdfConvolver.convolve_pdfs(pdfs=[self.pdf, pdf])
         return RandomVariable(pdf=new_pdf)
 
-    def __sub__(self, other: "RandomVariable") -> Self:
+    def __sub__(self, other: Union["RandomVariable", float]) -> Self:
         # Assumes pdfs are not correlated
         assert isinstance(other, RandomVariable)
         return self + (other * -1)
 
     def __mul__(self, factor: float) -> Self:
         factor = float(factor)
-        new_pdf = self.pdf.scale_x(other=factor)
+        new_pdf = self.pdf.scale(x=factor)
         return RandomVariable(pdf=new_pdf)
 
     def __rmul__(self, factor: float) -> Self:
@@ -95,3 +98,8 @@ class RandomVariable:
 
     def __truediv__(self, factor: float) -> Self:
         return self.__mul__(1.0 / factor)
+
+    @classmethod
+    def mix_rvs(cls, rvs: list["RandomVariable"], probabilities: Optional[list[float]] = None) -> Self:
+        pdfs = [rv.pdf for rv in rvs]
+        return RandomVariable(pdf=MixtureDistributionFunction(pdfs=pdfs, probabilities=probabilities))

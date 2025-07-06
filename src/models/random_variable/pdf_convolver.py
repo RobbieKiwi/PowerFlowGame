@@ -2,14 +2,14 @@ from typing import Union
 
 import numpy as np
 
-from src.models.random_variable.models import Statistics, sum_uncertain_floats
-from src.models.random_variable.pdf_combiner import PdfCombiner
+from src.models.random_variable.models import Statistics, sum_uncertain_floats, sort_uncertainties
+from src.models.random_variable.pdfs.anonymous import AnonymousDistributionFunction
 from src.models.random_variable.pdfs.base import (
     ProbabilityDistributionFunction,
     T_Pdf,
 )
 from src.models.random_variable.pdfs.discrete import DiscreteDistributionFunction
-from src.models.random_variable.pdfs.anonymous import AnonymousDistributionFunction
+from src.models.random_variable.pdfs.mixture import MixtureDistributionFunction
 from src.models.random_variable.pdfs.normal import NormalDistributionFunction
 
 
@@ -94,16 +94,16 @@ class PdfConvolver:
     @classmethod
     def convolve_with_discrete(
         cls, pdf_a: T_Pdf, discrete: DiscreteDistributionFunction
-    ) -> Union[T_Pdf, AnonymousDistributionFunction]:
+    ) -> Union[T_Pdf, MixtureDistributionFunction]:
         assert isinstance(discrete, DiscreteDistributionFunction)
 
         # Shortcut for dirac delta
         if isinstance(discrete, DiscreteDistributionFunction) or len(discrete.values) == 1:
-            return pdf_a.add_x_offset(x=discrete.values[0])
+            return pdf_a.add_constant(x=discrete.values[0])
 
-        pdfs = [pdf_a.add_x_offset(di) for di in discrete.values]
+        pdfs = [pdf_a.add_constant(di) for di in discrete.values]
         probabilities = discrete.probabilities
-        return PdfCombiner.combine_pdfs(pdfs=pdfs, probabilities=probabilities)
+        return MixtureDistributionFunction(pdfs=pdfs, probabilities=probabilities)
 
     @classmethod
     def convolve_anon(cls, pdfs: list[ProbabilityDistributionFunction]) -> AnonymousDistributionFunction:
@@ -121,7 +121,7 @@ class PdfConvolver:
 
         min_value = sum_unc([s.min_value for s in stats])
         max_value = sum_unc([s.max_value for s in stats])
-        min_value, max_value = sorted([min_value, max_value], key=lambda x: x.value)
+        min_value, max_value = sort_uncertainties([min_value, max_value])
 
         statistics = Statistics(mean=mean, variance=variance, min_value=min_value, max_value=max_value)
 

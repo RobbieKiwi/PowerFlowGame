@@ -28,13 +28,13 @@ class NormalDistributionFunction(ProbabilityDistributionFunction):
             max_value=Uncertainty(value=float('inf'), is_certain=True),
         )
 
-    def scale_x(self, other: float) -> Self:
-        other = float(other)
-        if other == 0.0:
+    def scale(self, x: float) -> Self | DiracDeltaDistributionFunction:
+        x = float(x)
+        if x == 0.0:
             return DiracDeltaDistributionFunction(value=0.0)
-        return NormalDistributionFunction(mean=self._mean * other, std_dev=self._std_dev * abs(other))
+        return NormalDistributionFunction(mean=self._mean * x, std_dev=self._std_dev * abs(x))
 
-    def add_x_offset(self, x: float) -> Self:
+    def add_constant(self, x: float) -> Self:
         return NormalDistributionFunction(mean=self._mean + float(x), std_dev=self._std_dev)
 
     def sample_numpy(self, n: int) -> np.ndarray:

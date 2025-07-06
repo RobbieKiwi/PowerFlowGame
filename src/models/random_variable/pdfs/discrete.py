@@ -43,13 +43,15 @@ class DiscreteDistributionFunction(ProbabilityDistributionFunction):
     def probabilities(self) -> list[float]:
         return self._probabilities.tolist()
 
-    def scale_x(self, other: float) -> Self:
-        other = float(other)
+    def scale(self, x: float) -> Self | "DiracDeltaDistributionFunction":
+        x = float(x)
+        if x == 0.0:
+            return DiracDeltaDistributionFunction(value=0.0)
         return DiscreteDistributionFunction(
-            values=[float(v * other) for v in self._values], probabilities=self._probabilities.tolist()
+            values=[float(v * x) for v in self._values], probabilities=self._probabilities.tolist()
         )
 
-    def add_x_offset(self, x: float) -> Self:
+    def add_constant(self, x: float) -> Self:
         x = float(x)
         return DiscreteDistributionFunction(
             values=[float(v + x) for v in self._values], probabilities=self._probabilities.tolist()
@@ -68,8 +70,8 @@ class DiscreteDistributionFunction(ProbabilityDistributionFunction):
     def _get_plot_range(self) -> tuple[float, float]:
         min_value = self.statistics.min_value.value
         max_value = self.statistics.max_value.value
-        x_range = max_value - min_value
-        buffer = x_range * 0.1
+        low_high_range = max_value - min_value
+        buffer = low_high_range * 0.1
         if buffer == 0.0:
             buffer = max(1.0, abs(min_value))
         return min_value - buffer, max_value + buffer
@@ -109,7 +111,7 @@ class DiracDeltaDistributionFunction(DiscreteDistributionFunction):
     def value(self) -> float:
         return float(self._values[0])
 
-    def scale_x(self, other: float) -> Self:
+    def scale(self, x: float) -> Self:
         return DiracDeltaDistributionFunction(value=self.mean * other)
 
     def sample_numpy(self, n: int) -> np.ndarray:
