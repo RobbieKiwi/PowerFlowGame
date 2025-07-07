@@ -50,10 +50,10 @@ class ProbabilityDistributionFunction(ABC):
         return str(self)
 
     def plot(self, kind: PdfPlotType = "both") -> None:
-        v_lines = {self.mean: "red"}
+        v_lines = [(self.mean, "red", "mean")]
         if self.variance > 0:
-            v_lines[self.mean - self.std_dev] = "orange"
-            v_lines[self.mean + self.std_dev] = "orange"
+            v_lines.append((self.mean - self.std_dev, "orange", "-1 std_dev"))
+            v_lines.append((self.mean + self.std_dev, "orange", "+1 std_dev"))
 
         def _plot(is_cumulative: bool, ax: Axes) -> None:
             if is_cumulative:
@@ -65,8 +65,10 @@ class ProbabilityDistributionFunction(ABC):
             ax.set_xlabel('x')
             ax.set_xlim(self._get_plot_range())
             ax.set_ylabel('P(X<=x)' if is_cumulative else 'P(X=x)')
-            for k, v in v_lines.items():
-                ax.axvline(k, color=v, linestyle='--', linewidth=1)
+            for item in v_lines:
+                pos, color, label = item
+                ax.axvline(pos, color=color, label=label, linestyle='--', linewidth=1)
+            ax.legend()
             ax.grid(True)
 
         if kind == "both":
