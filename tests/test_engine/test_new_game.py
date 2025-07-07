@@ -14,7 +14,7 @@ class TestDefaultGameInitializer(TestCase):
     def setUp(self) -> None:
         self.game_id = GameId(1)
         self.player_names = ["Alice", "Bob", "Charlie"]
-        self.settings = GameSettings(n_players=3, n_buses=10)
+        self.settings = GameSettings(n_buses=10)
 
     def test_create_new_game(self) -> None:
         game_initializer = DefaultGameInitializer(settings=self.settings)
@@ -22,23 +22,22 @@ class TestDefaultGameInitializer(TestCase):
 
         self.assertIsInstance(game_state, GameState)
         self.assertEqual(game_state.game_id, self.game_id)
-        self.assertEqual(len(game_state.players), len(self.player_names))
+        self.assertEqual(len(game_state.players), len(self.player_names) + 1)
         for i, player_name in enumerate(self.player_names):
             player = game_state.players[PlayerId(i + 1)]
             self.assertEqual(player.name, player_name)
             self.assertEqual(player.money, 1000)  # Default money
-            self.assertFalse(player.is_having_turn)
+            self.assertTrue(player.is_having_turn)
 
         self.assertIsInstance(game_state.assets, AssetRepo)
         self.assertIsInstance(game_state.buses, BusRepo)
         self.assertIsInstance(game_state.transmission, TransmissionRepo)
 
         # check that settings are applied correctly
-        self.assertEqual(len(game_state.players), self.settings.n_players)
         self.assertEqual(len(game_state.buses), self.settings.n_buses)
 
         # check that every player owns an ice cream asset
-        for player_id in game_state.players.player_ids:
+        for player_id in game_state.players.human_player_ids:
             ice_cream_assets = game_state.assets.get_all_for_player(player_id).filter({"is_ice_cream": True})
             self.assertEqual(len(ice_cream_assets), 1, f"Player {player_id} should own at least one ice cream asset")
 

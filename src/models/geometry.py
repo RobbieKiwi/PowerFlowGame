@@ -77,6 +77,13 @@ class Shape:
         self.shape_type = shape_type
         self.points = points
 
+    def __str__(self) -> str:
+        open_text = "open" if not self.is_closed else "closed"
+        return f"<Shape: {open_text} {self.shape_type.value} with {len(self.points)} points>"
+
+    def __repr__(self) -> str:
+        return str(self)
+
     def __add__(self, other: Self | Point | list[Point]) -> Self:
         if isinstance(other, Point):
             return Shape(points=self.points + [other], shape_type=ShapeType.UNKOWN)
@@ -85,6 +92,13 @@ class Shape:
         if isinstance(other, Shape):
             return Shape(points=self.points + other.points, shape_type=ShapeType.UNKOWN)
         raise TypeError(f"Cannot add {type(other)} to Geometry")
+
+    def __eq__(self, other: "Shape") -> bool:
+        if not isinstance(other, Shape):
+            return False
+        if not self.shape_type == other.shape_type:
+            return False
+        return all(self_point == other_point for self_point, other_point in zip(self.points, other.points))
 
     @cached_property
     def is_closed(self) -> bool:

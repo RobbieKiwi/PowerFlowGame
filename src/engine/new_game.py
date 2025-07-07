@@ -2,7 +2,7 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import replace
 from itertools import combinations, count
-from typing import Optional
+from typing import Optional, Iterable, Generator
 
 import numpy as np
 
@@ -308,11 +308,16 @@ class DefaultGameInitializer(BaseGameInitializer):
             radius=self.settings.map_area.height * 0.9 / 2,
         )
 
-        bus_ids = [BusId(i + 1) for i in range(self.settings.n_buses)]
-        buses = [
-            Bus(id=bid, player_id=pid, x=top.x, y=top.y)
-            for bid, pid, top in zip(bus_ids, player_repo.player_ids, topology)
-        ]
+        bus_ids = iter([BusId(i + 1) for i in range(self.settings.n_buses)])
+        topos = iter(topology)
+
+        buses: list[Bus] = []
+        for pid, top in zip(player_repo.player_ids, topos):
+            buses.append(Bus(id=next(bus_ids), player_id=pid, x=top.x, y=top.y))
+
+        for bus_id, top in zip(bus_ids, topos):
+            buses.append(Bus(id=bus_id, player_id=PlayerId.get_npc(), x=top.x, y=top.y))
+
         return BusRepo(buses)
 
     def _create_asset_repo(self, player_repo: PlayerRepo, bus_repo: BusRepo) -> AssetRepo:
@@ -327,7 +332,7 @@ class DefaultGameInitializer(BaseGameInitializer):
         asset_ids = asset_id_iterator(start=1)
 
         for player_id in player_repo.player_ids:
-            if player_id is PlayerId.get_npc():
+            if player_id == PlayerId.get_npc():
                 continue
             assets.append(
                 AssetInfo(

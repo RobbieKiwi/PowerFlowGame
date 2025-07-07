@@ -42,11 +42,9 @@ class BusRepo(LdcRepo[Bus]):
 
     @property
     def ice_cream_buses(self) -> list[Bus]:
-        """Get all buses that are ice cream buses."""
         return [self[b] for b in self.player_bus_ids]
 
     def get_bus_for_player(self, player_id: PlayerId) -> Bus:
-        """Get the bus for a specific player."""
         player_buses = self.filter({"player_id": player_id})
         assert len(player_buses) == 1
         return player_buses.as_objs()[0]

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self
 
 from src.models.geometry import Point, Shape, ShapeType
@@ -16,7 +16,9 @@ class GameSettings:
     max_bid_price: float = 100
     initial_funds: int = 1000
     max_connections_per_bus: int = 7
-    map_area: Shape = Shape.make_rectangle(bottom_left=Point(0, 0), top_right=Point(30, 30))
+    map_area: Shape = field(
+        default_factory=lambda: Shape.make_rectangle(bottom_left=Point(0, 0), top_right=Point(30, 30))
+    )
 
     def __post_init__(self) -> None:
         assert self.map_area.shape_type is ShapeType.Rectangle
