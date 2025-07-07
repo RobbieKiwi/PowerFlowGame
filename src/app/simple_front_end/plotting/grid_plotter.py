@@ -12,6 +12,7 @@ from src.models.ids import BusId
 
 class GridPlotter:
     def plot(self, game_state: GameState) -> None:
+        # TODO Use playable map area from game state. Plot a box around the playable area.
         plot_objects = self.get_plot_objects(game_state)
 
         hover_texts = [po.render_hover_text() for po in plot_objects]
@@ -33,6 +34,7 @@ class GridPlotter:
 
     @staticmethod
     def get_plot_objects(game_state: GameState) -> list[PlotObject]:
+
         bus_dict: dict[BusId, PlotBus] = {}
         for bus in game_state.buses:
             owner = game_state.players[bus.player_id]
