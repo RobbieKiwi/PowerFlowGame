@@ -16,6 +16,10 @@ class Player(LightDc):
     money: float
     is_having_turn: bool  # Note that multiple players can have turns at the same time
 
+    @classmethod
+    def make_npc(cls) -> "Player":
+        return cls(id=PlayerId.get_npc(), name="NPC", color=Color("black"), money=0.0, is_having_turn=False)
+
 
 class PlayerRepo(LdcRepo[Player]):
     @classmethod
@@ -26,6 +30,18 @@ class PlayerRepo(LdcRepo[Player]):
     @property
     def player_ids(self) -> list[PlayerId]:
         return [PlayerId(x) for x in self.df.index.tolist()]
+
+    @cached_property
+    def human_players(self) -> list[Player]:
+        return [self[p] for p in self.human_player_ids]
+
+    @cached_property
+    def human_player_ids(self) -> list[PlayerId]:
+        return [p for p in self.player_ids if p != PlayerId.get_npc()]
+
+    @cached_property
+    def n_human_players(self) -> int:
+        return len(self.human_players)
 
     def get_player(self, player_id: PlayerId) -> Player:
         return self[player_id]
@@ -43,30 +59,27 @@ class PlayerRepo(LdcRepo[Player]):
         return self.update_frame(df)
 
     def add_money(self, player_id: PlayerId, amount: float) -> Self:
-        # Add an amount of money to a player's balance
         return self._adjust_money(player_id, lambda x: x + amount)
 
     def subtract_money(self, player_id: PlayerId, amount: float) -> Self:
-        # Subtract an amount of money from a player's balance
         return self._adjust_money(player_id, lambda x: x - amount)
 
     def transfer_money(self, from_player: PlayerId, to_player: PlayerId, amount: float) -> Self:
-        # Transfer money from one player to another
         return self.add_money(to_player, amount).subtract_money(from_player, amount)
 
     def _set_turn(self, player_id: PlayerId | list[PlayerId], is_having_turn: bool) -> Self:
-        # Set whether a player is having a turn or not
         df = self.df.copy()
         df.loc[player_id, "is_having_turn"] = is_having_turn
         return self.update_frame(df)
 
     def end_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
-        # End players' turn
         return self._set_turn(player_id, False)
 
     def start_turn(self, player_id: PlayerId | list[PlayerId]) -> Self:
-        # Start a players' turn
         return self._set_turn(player_id, True)
+
+    def start_all_turns(self) -> Self:
+        return self._set_turn(self.human_player_ids, True)
 
     # DELETE
     def delete_player(self, player_id: PlayerId) -> Self:

@@ -1,6 +1,7 @@
 import math
 from abc import ABC, abstractmethod
-from itertools import combinations
+from dataclasses import replace
+from itertools import combinations, count
 from typing import Optional
 
 import numpy as np
@@ -10,7 +11,7 @@ from src.models.buses import BusRepo, Bus
 from src.models.colors import Color, get_random_player_colors
 from src.models.game_settings import GameSettings
 from src.models.game_state import GameState, Phase
-from src.models.geometry import Point, Geometry
+from src.models.geometry import Point, Shape
 from src.models.ids import GameId, PlayerId, BusId
 from src.models.player import Player, PlayerRepo
 from src.models.transmission import TransmissionRepo, TransmissionInfo, TransmissionId
@@ -20,14 +21,14 @@ class BusTopologyMaker:
 
     @staticmethod
     def make_line(n_buses: int, length: int) -> list[Point]:
-        line_layout = Geometry.make_line(start=Point(x=0.0, y=0.0), end=Point(x=length, y=0.0), n_points=n_buses)
+        line_layout = Shape.make_line(start=Point(x=0.0, y=0.0), end=Point(x=length, y=0.0), n_points=n_buses)
         return line_layout.points
 
     @staticmethod
     def make_grid(
         n_buses_per_row: int, n_buses_per_col: int, x_range: float = 10.0, y_range: float = 10.0
     ) -> list[Point]:
-        grid_layout = Geometry.make_grid(
+        grid_layout = Shape.make_grid(
             start_corner=Point(x=0.0, y=0.0),
             width=x_range,
             height=y_range,
@@ -39,15 +40,15 @@ class BusTopologyMaker:
     @staticmethod
     def make_random(n_buses: int, x_range: float = 10.0, y_range: float = 10.0) -> list[Point]:
         n_bins = n_buses
-        grid_layout = Geometry.make_grid(
-            start_corner=Point(x=0.0, y=0.0), width=x_range, height=y_range, n_points_per_direction=n_bins
+        grid_layout = Shape.make_grid(
+            start_corner=Point(x=0.0, y=0.0), width=x_range, height=y_range, n_points_in_x=n_bins, n_points_in_y=n_bins
         )
         selection = np.random.choice(grid_layout.points, n_buses, replace=False)
         return selection
 
     @classmethod
     def make_regular_polygon(cls, n_buses: int, radius: float = 10.0) -> list[Point]:
-        circle_layout = Geometry.make_regular_polygon(
+        circle_layout = Shape.make_regular_polygon(
             center=Point(x=0.0, y=0.0), radius=radius, n_points=n_buses, closed=False
         )
         return circle_layout.points
@@ -55,9 +56,9 @@ class BusTopologyMaker:
     @classmethod
     def make_layered_polygon(cls, n_buses: int, n_buses_per_layer: int, radius: float = 10.0) -> list[Point]:
         n_layers = math.ceil(n_buses / n_buses_per_layer)
-        layered_polygon_layout = Geometry.make_empty()
+        layered_polygon_layout = Shape.make_empty()
         for i in range(n_layers):
-            layered_polygon_layout += Geometry.make_regular_polygon(
+            layered_polygon_layout += Shape.make_regular_polygon(
                 center=Point(x=0.0, y=0.0), radius=radius * (i + 1) / n_layers, n_points=n_buses_per_layer, closed=False
             )
         return layered_polygon_layout.points[:n_buses]
@@ -144,7 +145,8 @@ class TransmissionTopologyMaker:
 
         return connections
 
-    def make_connect_n_closest(self, bus_repo: BusRepo, n_connections: int) -> list[dict[str, BusId]]:
+    @staticmethod
+    def make_connect_n_closest(bus_repo: BusRepo, n_connections: int) -> list[dict[str, BusId]]:
         """
         Create a transmission topology that connects each bus to its n closest buses.
         :param bus_repo: BusRepo containing the buses to connect.
@@ -188,12 +190,9 @@ class BaseGameInitializer(ABC):
         :param player_colors: List of player colors.
         :return: A new GameState instance with the provided game ID and settings.
         """
-        assert (
-            len(player_names) == self.settings.n_players == len(player_colors) if player_colors else True
-        ), "Number of player names and colors must match the number of players defined in game settings."
-
+        n_players = len(player_names)
         if player_colors is None:
-            player_colors = get_random_player_colors(self.settings.n_players)
+            player_colors = get_random_player_colors(n_players)
 
         player_repo = self._create_player_repo(names=player_names, colors=player_colors)
         bus_repo = self._create_bus_repo(player_repo=player_repo)
@@ -213,12 +212,11 @@ class BaseGameInitializer(ABC):
             transmission=transmission_repo,
             market_coupling_result=None,
         )
+        new_game = replace(new_game, players=new_game.players.start_all_turns())
         return new_game
 
     def _create_player_repo(self, names: list[str], colors: list[Color]) -> PlayerRepo:
-        assert (
-            len(names) == len(colors) == self.settings.n_players
-        ), "Number of names and colors must match the number of players."
+        assert len(names) == len(colors), "Number of player names and colors must match"
 
         players = [
             Player(
@@ -230,6 +228,7 @@ class BaseGameInitializer(ABC):
             )
             for i, (name, color) in enumerate(zip(names, colors), start=1)
         ]
+        players.append(Player.make_npc())
 
         return PlayerRepo(players)
 
@@ -302,31 +301,40 @@ class DefaultGameInitializer(BaseGameInitializer):
     """
 
     def _create_bus_repo(self, player_repo: PlayerRepo) -> BusRepo:
+
         topology = BusTopologyMaker.make_layered_polygon(
             n_buses=self.settings.n_buses,
-            n_buses_per_layer=self.settings.n_players,
-            radius=self.settings.map_size.height * 0.9 / 2,
+            n_buses_per_layer=player_repo.n_human_players,
+            radius=self.settings.map_area.height * 0.9 / 2,
         )
+
+        bus_ids = [BusId(i + 1) for i in range(self.settings.n_buses)]
         buses = [
-            (
-                Bus(id=BusId(i + 1), player_id=player_repo.player_ids[i], **topology[i].to_dict())
-                if i < self.settings.n_players
-                else Bus(id=BusId(i + 1), **topology[i].to_dict())
-            )  # Neutral bus not owned by any player
-            for i in range(self.settings.n_buses)
+            Bus(id=bid, player_id=pid, x=top.x, y=top.y)
+            for bid, pid, top in zip(bus_ids, player_repo.player_ids, topology)
         ]
         return BusRepo(buses)
 
     def _create_asset_repo(self, player_repo: PlayerRepo, bus_repo: BusRepo) -> AssetRepo:
         assets = []
+
         # Create one ice cream load for each player
-        for i in range(self.settings.n_players):
+
+        def asset_id_iterator(start: int = 1):
+            for i in count(start):
+                yield AssetId(i)
+
+        asset_ids = asset_id_iterator(start=1)
+
+        for player_id in player_repo.player_ids:
+            if player_id is PlayerId.get_npc():
+                continue
             assets.append(
                 AssetInfo(
-                    id=AssetId(i + 1),
-                    owner_player=player_repo.player_ids[i],
+                    id=next(asset_ids),
+                    owner_player=player_id,
                     asset_type=AssetType.LOAD,
-                    bus=bus_repo.bus_ids[i],
+                    bus=bus_repo.get_bus_for_player(player_id=player_id).id,
                     power_expected=50.0,
                     power_std=0.0,
                     is_for_sale=False,
@@ -338,10 +346,10 @@ class DefaultGameInitializer(BaseGameInitializer):
                 )
             )
         # Create the rest of the assets as npc generators
-        for i in range(self.settings.n_players, self.settings.n_init_assets):
+        for _ in range(self.settings.n_init_assets):
             assets.append(
                 AssetInfo(
-                    id=AssetId(i + 1),
+                    id=next(asset_ids),
                     owner_player=PlayerId.get_npc(),
                     asset_type=AssetType.GENERATOR,
                     bus=BusId(np.random.choice(bus_repo.bus_ids)),
@@ -359,7 +367,7 @@ class DefaultGameInitializer(BaseGameInitializer):
 
     def _create_transmission_repo(self, player_repo: PlayerRepo, bus_repo: BusRepo) -> TransmissionRepo:
         topology = TransmissionTopologyMaker.make_spiderweb(
-            bus_repo=bus_repo, n_buses_per_layer=self.settings.n_players
+            bus_repo=bus_repo, n_buses_per_layer=player_repo.n_human_players
         )
         lines = [
             TransmissionInfo(

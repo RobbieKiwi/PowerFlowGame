@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import IntEnum
-from typing import Self, Optional, Counter
+from typing import Self, Optional
 
 from src.models.assets import AssetRepo
 from src.models.buses import BusRepo
@@ -19,7 +19,6 @@ from src.tools.serialization import (
 
 
 class Phase(IntEnum):
-    # Values are just placeholders
     CONSTRUCTION = 0
     SNEAKY_TRICKS = 1
     DA_AUCTION = 2
@@ -45,6 +44,9 @@ class GameState:
     @property
     def current_players(self) -> list[PlayerId]:
         return self.players.get_currently_playing().player_ids
+
+    def start_all_turns(self) -> Self:
+        return replace(self, players=self.players.start_all_turns())
 
     def to_simple_dict(self) -> dict:
         return {

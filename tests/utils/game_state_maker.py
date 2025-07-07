@@ -11,7 +11,7 @@ from src.models.ids import GameId
 from src.models.market_coupling_result import MarketCouplingResult
 from src.models.player import PlayerRepo
 from src.models.transmission import TransmissionRepo
-from tests.utils.random_choice import random_choice
+from src.tools.random_choice import random_choice
 from tests.utils.repo_maker import PlayerRepoMaker, BusRepoMaker, AssetRepoMaker, TransmissionRepoMaker
 
 

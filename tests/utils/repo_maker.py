@@ -12,7 +12,7 @@ from src.models.data.light_dc import T_LightDc
 from src.models.ids import PlayerId, AssetId, BusId, TransmissionId
 from src.models.player import PlayerRepo, Player
 from src.models.transmission import TransmissionRepo, TransmissionInfo
-from tests.utils.random_choice import random_choice, random_choice_multi
+from src.tools.random_choice import random_choice, random_choice_multi
 
 
 T_RepoMaker = TypeVar("T_RepoMaker", bound="RepoMaker")
@@ -137,9 +137,7 @@ class PlayerRepoMaker(RepoMaker[PlayerRepo, Player]):
         # Ensure that there is exactly one bus per non-npc player
         player_ids = [dc.id for dc in self.dcs]
         if PlayerId.get_npc() not in player_ids:
-            self.dcs.append(
-                Player(id=PlayerId.get_npc(), name="NPC", color=Color("black"), money=0.0, is_having_turn=False)
-            )
+            self.dcs.append(Player.make_npc())
 
 
 class AssetRepoMaker(RepoMaker[AssetRepo, AssetInfo]):

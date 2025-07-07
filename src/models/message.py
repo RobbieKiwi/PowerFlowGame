@@ -39,7 +39,7 @@ class GameToPlayerMessage(Message, ABC):
     message: str
 
     def __str__(self) -> str:
-        return f"<{self.__class__.__name__}(Engine -> {self.player_id})>"
+        return f"<{self.__class__.__name__}(Engine -> {self.player_id}: {self.message})>"
 
     def __repr__(self) -> str:
         return str(self)

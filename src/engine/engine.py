@@ -1,8 +1,9 @@
 from dataclasses import replace
 
 from src.engine.market_coupling import MarketCouplingCalculator
-from src.models.market_coupling_result import MarketCouplingResult
 from src.models.game_state import GameState, Phase
+from src.models.ids import AssetId, TransmissionId, BusId
+from src.models.market_coupling_result import MarketCouplingResult
 from src.models.message import (
     UpdateBidRequest,
     BuyAssetRequest,
@@ -41,14 +42,18 @@ class Engine:
             raise NotImplementedError(f"message type {type(msg)} not implemented.")
 
     @staticmethod
-    def adjust_players_aftermarket_money(
+    def update_game_state_with_market_coupling_result(
         game_state: GameState,
         market_coupling_result: MarketCouplingResult,
     ) -> GameState:
         new_game_state = replace(game_state)
-        assets_dispatch = market_coupling_result.assets_dispatch
-        transmission_flows = market_coupling_result.transmission_flows
-        bus_prices = market_coupling_result.bus_prices
+
+        # Only take first timestep
+        # TODO This typing is technically a lie because the keys are ints
+        assets_dispatch: dict[AssetId, float] = market_coupling_result.assets_dispatch.loc[0, :].to_dict()
+        transmission_flows: dict[TransmissionId, float] = market_coupling_result.transmission_flows.loc[0, :].to_dict()
+        bus_prices: dict[BusId, float] = market_coupling_result.bus_prices.loc[0, :].to_dict()
+
         for player in game_state.players:
             operating_cost = 0.0
             market_cashflow = 0.0
@@ -61,9 +66,16 @@ class Engine:
                 volume = transmission_flows[line.id]
                 price_spread = bus_prices[line.bus1] - bus_prices[line.bus2]
                 congestion_payments += volume * price_spread
+            delta_money = market_cashflow + congestion_payments - operating_cost
             new_game_state = replace(
-                new_game_state, players=game_state.players.add_money(player.id, market_cashflow - operating_cost)
+                new_game_state,
+                players=game_state.players.add_money(player_id=player.id, amount=delta_money),
             )
+
+        new_game_state = replace(
+            new_game_state,
+            market_coupling_result=market_coupling_result,
+        )
         return new_game_state
 
     @classmethod
@@ -78,35 +90,55 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
+
+        def increment_phase_and_start_turns(gs: GameState) -> GameState:
+            return replace(gs, phase=msg.phase.get_next(), players=game_state.players.start_all_turns())
+
         if msg.phase == Phase.CONSTRUCTION:
-            new_game_state = replace(game_state, phase=msg.phase.get_next())
-            return new_game_state, [
-                GameUpdate(player_id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.")
-                for player_id in game_state.players.player_ids
-            ]
+            new_game_state = increment_phase_and_start_turns(game_state)
+            return new_game_state, cls._make_phase_update_messages(new_game_state)
+
         elif msg.phase == Phase.DA_AUCTION:
             market_result = MarketCouplingCalculator.run(game_state)
-            gs_updated_player_money = cls.adjust_players_aftermarket_money(game_state, market_result)
-            new_game_state = replace(
-                gs_updated_player_money, market_coupling_result=market_result, phase=msg.phase.get_next()
+            new_game_state = cls.update_game_state_with_market_coupling_result(
+                game_state=game_state, market_coupling_result=market_result
             )
-            return new_game_state, [
-                GameUpdate(
-                    player_id,
-                    game_state=new_game_state,
-                    message=f"Day-ahead market has been cleared. Your balance was adjusted accordingly from ${game_state.players[player_id].money} to ${new_game_state.players[player_id].money}. Phase changed to {new_game_state.phase}.",
+            new_game_state = increment_phase_and_start_turns(new_game_state)
+            msgs = cls._make_phase_update_messages(new_game_state)
+
+            for player_id in new_game_state.players.player_ids:
+                old_money = game_state.players[player_id].money
+                new_money = new_game_state.players[player_id].money
+                text = f"Day-ahead market cleared. Your balance was adjusted accordingly from ${old_money} to ${new_money}."
+                msgs.append(
+                    GameUpdate(
+                        player_id=player_id,
+                        game_state=new_game_state,
+                        message=text,
+                    )
                 )
-                for player_id in new_game_state.players.player_ids
-            ]
+            return new_game_state, msgs
+
         elif msg.phase == Phase.SNEAKY_TRICKS:
-            new_game_state = replace(game_state, phase=msg.phase.get_next())
-            return new_game_state, [
-                GameUpdate(id, game_state=game_state, message=f"Phase changed to {new_game_state.phase}.")
-                for id in game_state.players.player_ids
-            ]
+            new_game_state = increment_phase_and_start_turns(game_state)
+            return new_game_state, cls._make_phase_update_messages(new_game_state)
+
         # TODO in the new phase, one or all players have turns, so we need to update the game state accordingly
         else:
             raise NotImplementedError(f"Phase {msg.phase} not implemented.")
+
+    @staticmethod
+    def _make_phase_update_messages(game_state: GameState) -> list[GameUpdate]:
+        messages: list[GameUpdate] = []
+        for player_id in game_state.players.player_ids:
+            messages.append(
+                GameUpdate(
+                    player_id=player_id,
+                    game_state=game_state,
+                    message=f"Phase changed to {game_state.phase.name}",
+                )
+            )
+        return messages
 
     @classmethod
     def handle_update_bid_message(
@@ -229,11 +261,9 @@ class Engine:
         :param msg: The triggering message
         :return: The new game state and a list of messages to be sent to the player interface
         """
-        new_players = game_state.players.end_turn(player_id=msg.player_id)
         # TODO If this phase requires players to play one by one (Do we need such a phase?) Then cycle to the next player
+        game_state = replace(game_state, players=game_state.players.end_turn(player_id=msg.player_id))
         if game_state.players.are_all_players_finished():
-            new_game_state = replace(game_state, players=new_players)
-            return new_game_state, [ConcludePhase(phase=game_state.phase)]
+            return game_state, [ConcludePhase(phase=game_state.phase)]
         else:
-            new_game_state = replace(game_state, players=new_players)
-            return new_game_state, []
+            return game_state, []

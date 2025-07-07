@@ -7,7 +7,7 @@ from plotly.graph_objs import Scatter
 from src.app.simple_front_end.plotting.base_plot_object import PlotObject
 from src.app.simple_front_end.plotting.po_bus import PlotBus
 from src.models.colors import Color
-from src.models.geometry import Point, Geometry
+from src.models.geometry import Point, Shape
 from src.models.player import Player
 from src.models.transmission import TransmissionInfo
 
@@ -61,7 +61,7 @@ class PlotTxLine(PlotObject):
         else:
             p2 = end - Point(x=vector.x * 0.1, y=0)
 
-        mid_points = Geometry.make_line(start=p1, end=p2, n_points=5)
+        mid_points = Shape.make_line(start=p1, end=p2, n_points=5)
         points = [start, *mid_points.points, end]
         return points
 

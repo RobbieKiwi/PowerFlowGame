@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from src.models.data.ldc_repo import LdcRepo
 from src.models.data.light_dc import LightDc
+from src.models.geometry import Point
 from src.models.ids import PlayerId, BusId
 
 
@@ -11,6 +12,10 @@ class Bus(LightDc):
     x: float
     y: float
     player_id: PlayerId = PlayerId.get_npc()
+
+    @property
+    def point(self) -> Point:
+        return Point(x=self.x, y=self.y)
 
     @property
     def is_ice_cream_bus(self) -> bool:

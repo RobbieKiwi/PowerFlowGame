@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.models.geometry import Point, Geometry
+from src.models.geometry import Point, Shape
 
 
 class TestGeometry(TestCase):
@@ -39,7 +39,7 @@ class TestGeometry(TestCase):
     def test_linspace(self) -> None:
         point_a = Point(x=1.0, y=2.0)
         point_b = Point(x=1.0, y=6.0)
-        line = Geometry.make_line(start=point_a, end=point_b, n_points=3)
+        line = Shape.make_line(start=point_a, end=point_b, n_points=3)
 
         self.assertEqual(len(line.points), 3)
         expected_x = [1, 1, 1]
@@ -50,7 +50,7 @@ class TestGeometry(TestCase):
 
     def test_circle(self) -> None:
         point_a = Point(x=1.0, y=2.0)
-        circle = Geometry.make_regular_polygon(center=point_a, radius=1.0, n_points=4)
+        circle = Shape.make_regular_polygon(center=point_a, radius=1.0, n_points=4)
 
         for p in circle.points:
             self.assertAlmostEqual((p - point_a).length, 1.0)
@@ -61,7 +61,7 @@ class TestGeometry(TestCase):
             self.assertAlmostEqual(p.x, expected_x_val)
             self.assertAlmostEqual(p.y, expected_y_val)
 
-        closed_circle = Geometry.make_regular_polygon(center=point_a, radius=1.0, n_points=4, closed=True)
+        closed_circle = Shape.make_regular_polygon(center=point_a, radius=1.0, n_points=4, closed=True)
         first, last = closed_circle.points[0], closed_circle.points[-1]
         self.assertAlmostEqual(first.x, last.x)
         self.assertAlmostEqual(first.y, last.y)
