@@ -122,9 +122,9 @@ class PlotBus(PlotObject):
 
         return SocketProvider(tr_sockets=tr_sockets, bl_sockets=bl_sockets)
 
-    @cached_property
+    @property
     def centre(self) -> Point:
-        return Point(x=self.bus.x, y=self.bus.y)
+        return self.bus.point
 
     @cached_property
     def is_horizontal(self) -> bool:

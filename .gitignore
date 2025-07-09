@@ -175,3 +175,4 @@ cython_debug/
 
 # IDE
 .idea/
+src/game_cache/*.json
